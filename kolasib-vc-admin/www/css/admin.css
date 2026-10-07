@@ -18,6 +18,11 @@
   --radius-full: 9999px;
   --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
   --shadow-md: 0 4px 10px rgba(0,0,0,0.4);
+  --admin-max-width: 480px;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
 }
 
 * {
@@ -39,7 +44,7 @@ body {
 
 .admin-app-container {
   width: 100%;
-  max-width: 480px;
+  max-width: var(--admin-max-width);
   background-color: var(--admin-bg);
   min-height: 100vh;
   display: flex;
@@ -47,6 +52,7 @@ body {
   position: relative;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
   overflow-x: hidden;
+  transition: max-width 0.25s ease;
 }
 
 /* Screens */
@@ -153,7 +159,7 @@ body {
 .admin-header {
   background: var(--admin-surface);
   border-bottom: 1px solid var(--admin-border);
-  padding: 16px 16px 8px 16px;
+  padding: max(14px, calc(10px + var(--safe-top))) max(16px, calc(14px + var(--safe-right))) 8px max(16px, calc(14px + var(--safe-left)));
   position: sticky;
   top: 0;
   z-index: 40;
@@ -327,7 +333,7 @@ body {
 /* Admin Body */
 .admin-body {
   flex: 1;
-  padding: 14px;
+  padding: 14px max(14px, calc(12px + var(--safe-right))) max(20px, calc(14px + var(--safe-bottom))) max(14px, calc(12px + var(--safe-left)));
   overflow-y: auto;
 }
 
@@ -1288,6 +1294,340 @@ body {
   align-items: center;
   gap: 6px;
 }
+
+/* -------------------------------------------------------------
+ * Multi-Device Responsive Optimizations for Admin Portal
+ * ------------------------------------------------------------- */
+
+/* 1. Compact / Small Mobile Screens (<= 375px) */
+@media (max-width: 375px) {
+  .admin-header {
+    padding: max(10px, calc(6px + var(--safe-top))) 10px 8px 10px;
+  }
+
+  .admin-brand {
+    gap: 6px;
+  }
+
+  .admin-badge-icon {
+    width: 32px;
+    height: 32px;
+    font-size: 0.95rem;
+  }
+
+  .admin-brand h1 {
+    font-size: 0.95rem;
+  }
+
+  .admin-brand p {
+    font-size: 0.65rem;
+  }
+
+  .header-actions {
+    gap: 4px;
+  }
+
+  .btn-sheets-hub {
+    padding: 4px 8px;
+    font-size: 0.7rem;
+  }
+
+  .btn-logout {
+    width: 32px;
+    height: 32px;
+  }
+
+  .district-control-bar {
+    padding: 4px 8px;
+    gap: 6px;
+  }
+
+  .d-control-label {
+    font-size: 0.7rem;
+  }
+
+  .admin-district-dropdown {
+    font-size: 0.75rem;
+    padding: 3px 6px;
+  }
+
+  .active-district-tag {
+    font-size: 0.62rem;
+    padding: 2px 6px;
+  }
+
+  .tab-btn {
+    padding: 6px 9px;
+    font-size: 0.75rem;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+
+  .action-bar {
+    flex-wrap: wrap;
+  }
+
+  .btn-add {
+    padding: 8px 12px;
+    font-size: 0.8rem;
+  }
+
+  .login-wrapper {
+    padding: 32px 16px;
+  }
+
+  .login-shield {
+    width: 60px;
+    height: 60px;
+    font-size: 26px;
+  }
+}
+
+/* 2. Tablets, Phablets & Foldables (>= 600px) */
+@media (min-width: 600px) {
+  :root {
+    --admin-max-width: 840px;
+  }
+
+  body {
+    padding: 16px 0;
+    background-color: #060911;
+  }
+
+  .admin-app-container {
+    border-radius: var(--radius-lg);
+    min-height: calc(100vh - 32px);
+    border: 1px solid var(--admin-border);
+    box-shadow: 0 20px 45px rgba(0, 0, 0, 0.6);
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+
+  .stat-card {
+    padding: 14px;
+  }
+
+  .stat-val {
+    font-size: 1.5rem;
+  }
+
+  .admin-contacts-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .admin-offices-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .admin-reports-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .admin-emergency-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .admin-modal-backdrop {
+    align-items: center;
+    padding: 20px;
+  }
+
+  .admin-modal {
+    border-radius: var(--radius-lg);
+    max-width: 580px;
+    margin: auto;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.7);
+  }
+
+  .sheets-hub-modal {
+    max-width: 640px;
+  }
+}
+
+/* 3. Laptops, Desktops & Large Monitors (>= 992px) */
+@media (min-width: 992px) {
+  :root {
+    --admin-max-width: 1240px;
+  }
+
+  body {
+    padding: 24px 0 48px 0;
+    background: radial-gradient(circle at 50% 15%, #1e293b, #090d16);
+  }
+
+  .admin-app-container {
+    border-radius: 20px;
+    min-height: calc(100vh - 48px);
+    box-shadow: 0 30px 70px rgba(0, 0, 0, 0.75);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .admin-header {
+    padding: 18px 24px 12px 24px;
+  }
+
+  .header-top {
+    margin-bottom: 16px;
+  }
+
+  .admin-brand h1 {
+    font-size: 1.35rem;
+  }
+
+  .admin-brand p {
+    font-size: 0.8rem;
+  }
+
+  .district-control-bar {
+    padding: 8px 16px;
+    margin-bottom: 14px;
+  }
+
+  .d-control-label {
+    font-size: 0.82rem;
+  }
+
+  .admin-district-dropdown {
+    font-size: 0.88rem;
+    padding: 6px 12px;
+  }
+
+  .admin-nav-tabs {
+    gap: 8px;
+    padding-bottom: 4px;
+  }
+
+  .tab-btn {
+    padding: 10px 18px;
+    font-size: 0.88rem;
+    border-radius: var(--radius-md);
+  }
+
+  .admin-body {
+    padding: 20px 24px 32px 24px;
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(6, 1fr);
+    gap: 14px;
+    margin-bottom: 20px;
+  }
+
+  .stat-card {
+    padding: 16px;
+    border-radius: var(--radius-md);
+  }
+
+  .stat-val {
+    font-size: 1.75rem;
+  }
+
+  .action-bar {
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .search-input-wrap input {
+    height: 44px;
+    font-size: 0.92rem;
+    padding-left: 40px;
+  }
+
+  .search-input-wrap i {
+    top: 15px;
+    left: 14px;
+    font-size: 0.95rem;
+  }
+
+  .btn-add {
+    padding: 0 20px;
+    font-size: 0.9rem;
+    border-radius: var(--radius-md);
+  }
+
+  .admin-contacts-list {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+  }
+
+  .admin-offices-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+  }
+
+  .admin-emergency-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+  }
+
+  .admin-reports-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+  }
+
+  .admin-modal {
+    max-width: 680px;
+  }
+
+  .sheets-hub-modal {
+    max-width: 760px;
+  }
+
+  .sheets-option-group {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    align-items: center;
+  }
+}
+
+/* 4. Landscape Orientation Handling */
+@media (orientation: landscape) and (max-height: 500px) {
+  .admin-header {
+    padding-top: max(8px, var(--safe-top));
+    padding-bottom: 6px;
+  }
+
+  .admin-badge-icon {
+    width: 30px;
+    height: 30px;
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* 5. Fine pointer hover enhancements */
+@media (hover: hover) and (pointer: fine) {
+  .admin-contact-card:hover {
+    border-color: rgba(59, 130, 246, 0.4);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+    transition: all 0.2s ease;
+  }
+
+  .stat-card:hover {
+    border-color: rgba(59, 130, 246, 0.5);
+    transform: translateY(-2px);
+    transition: all 0.2s ease;
+  }
+}
+
 
 
 

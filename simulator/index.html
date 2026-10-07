@@ -333,6 +333,138 @@
       font-weight: 600;
       cursor: pointer;
     }
+
+    /* Mobile Device Switcher */
+    .mobile-device-switcher {
+      display: none;
+      width: 100%;
+      max-width: 412px;
+      margin: 0 auto 16px auto;
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 4px;
+      gap: 6px;
+    }
+
+    .switcher-btn {
+      flex: 1;
+      padding: 10px;
+      background: transparent;
+      border: none;
+      border-radius: 8px;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+
+    .switcher-btn.active.user {
+      background: #0284c7;
+      color: #ffffff;
+      box-shadow: 0 2px 8px rgba(2, 132, 199, 0.4);
+    }
+
+    .switcher-btn.active.admin {
+      background: #6366f1;
+      color: #ffffff;
+      box-shadow: 0 2px 8px rgba(99, 102, 241, 0.4);
+    }
+
+    /* Tablet Optimizations (768px - 1024px) */
+    @media (min-width: 768px) and (max-width: 1024px) {
+      .simulator-workspace {
+        gap: 20px;
+        padding: 20px 10px;
+      }
+      .android-frame {
+        width: 350px;
+        height: 700px;
+        border-radius: 36px;
+      }
+      .device-meta-header {
+        width: 350px;
+      }
+      .device-column {
+        display: flex !important;
+      }
+    }
+
+    /* Desktop (>= 768px) ensure both columns display */
+    @media (min-width: 768px) {
+      .device-column {
+        display: flex !important;
+      }
+    }
+
+    /* Mobile Optimizations (< 768px) */
+    @media (max-width: 767px) {
+      .top-bar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 12px 16px;
+      }
+
+      .top-actions {
+        width: 100%;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .btn-test {
+        padding: 6px 12px;
+        font-size: 0.78rem;
+      }
+
+      .mobile-device-switcher {
+        display: flex;
+      }
+
+      .simulator-workspace {
+        flex-direction: column;
+        padding: 16px 12px 30px 12px;
+        overflow-x: hidden;
+      }
+
+      .sync-center-col {
+        display: none !important;
+      }
+
+      .device-column {
+        width: 100%;
+        max-width: 420px;
+        display: none;
+      }
+
+      .device-column.mobile-active {
+        display: flex;
+      }
+
+      .device-meta-header {
+        width: 100%;
+      }
+
+      .android-frame {
+        width: 100%;
+        height: calc(100vh - 220px);
+        min-height: 540px;
+        max-height: 750px;
+        border-radius: 32px;
+        box-shadow: 0 0 0 6px #1e293b, 0 15px 40px rgba(0, 0, 0, 0.6);
+      }
+
+      .instruction-bar {
+        flex-direction: column;
+        gap: 10px;
+        padding: 14px 16px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -355,12 +487,12 @@
         <span>Live Push Server Active</span>
       </div>
 
-      <a href="/downloads/kolasib-vc-phonebook.apk" download class="btn-test" style="background:#059669; text-decoration:none;">
-        <i class="fa-solid fa-download"></i> Phonebook APK (4.9 MB)
+      <a href="/downloads/Mizoram_VC_Phonebook.apk" download class="btn-test" style="background:#059669; text-decoration:none;">
+        <i class="fa-solid fa-download"></i> Citizen APK (5.6 MB)
       </a>
 
-      <a href="/downloads/kolasib-vc-admin.apk" download class="btn-test" style="background:#4f46e5; text-decoration:none;">
-        <i class="fa-solid fa-download"></i> Admin APK (4.9 MB)
+      <a href="/downloads/Mizoram_VC_Admin.apk" download class="btn-test" style="background:#4f46e5; text-decoration:none;">
+        <i class="fa-solid fa-download"></i> Admin APK (5.6 MB)
       </a>
 
       <button class="btn-test" onclick="openTestModal()">
@@ -373,18 +505,28 @@
     </div>
   </header>
 
+  <!-- Mobile Device Switcher for small screens -->
+  <div class="mobile-device-switcher">
+    <button id="btnSwitchUser" class="switcher-btn active user" onclick="switchSimulatorDevice('user')">
+      <i class="fa-solid fa-mobile-screen"></i> 📱 Citizen App
+    </button>
+    <button id="btnSwitchAdmin" class="switcher-btn" onclick="switchSimulatorDevice('admin')">
+      <i class="fa-solid fa-shield-halved"></i> 🛡️ Admin Portal
+    </button>
+  </div>
+
   <!-- Simulator Workspace with Dual Phone Mockups -->
   <main class="simulator-workspace">
 
     <!-- Column 1: Citizen Phonebook App -->
-    <div class="device-column">
+    <div id="userDeviceCol" class="device-column mobile-active">
       <div class="device-meta-header">
         <div class="device-title user">
           <i class="fa-solid fa-mobile-screen"></i>
           <span>Mizoram VC Phonebook (Citizen App)</span>
         </div>
         <div class="device-links">
-          <a href="/downloads/kolasib-vc-phonebook.apk" download class="btn-icon-link" style="color:#34d399;"><i class="fa-solid fa-download"></i> Download APK</a>
+          <a href="/downloads/Mizoram_VC_Phonebook.apk" download class="btn-icon-link" style="color:#34d399;"><i class="fa-solid fa-download"></i> Download APK</a>
           <button class="btn-icon-link" onclick="reloadFrame('userFrame')"><i class="fa-solid fa-rotate-right"></i></button>
           <a href="/phonebook/" target="_blank" class="btn-icon-link"><i class="fa-solid fa-arrow-up-right-from-square"></i> Fullscreen</a>
         </div>
@@ -400,20 +542,20 @@
     </div>
 
     <!-- Center Sync Arrow -->
-    <div style="display:flex; flex-direction:column; align-items:center; gap:8px; color:#64748b;">
+    <div class="sync-center-col" style="display:flex; flex-direction:column; align-items:center; gap:8px; color:#64748b;">
       <i class="fa-solid fa-left-right" style="font-size:1.8rem; color:#38bdf8;"></i>
       <span style="font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:#94a3b8;">Instant SSE Push</span>
     </div>
 
     <!-- Column 2: District Admin App -->
-    <div class="device-column">
+    <div id="adminDeviceCol" class="device-column">
       <div class="device-meta-header">
         <div class="device-title admin">
           <i class="fa-solid fa-shield-halved"></i>
           <span>Mizoram VC Admin (State &amp; Multi-District)</span>
         </div>
         <div class="device-links">
-          <a href="/downloads/kolasib-vc-admin.apk" download class="btn-icon-link" style="color:#818cf8;"><i class="fa-solid fa-download"></i> Download APK</a>
+          <a href="/downloads/Mizoram_VC_Admin.apk" download class="btn-icon-link" style="color:#818cf8;"><i class="fa-solid fa-download"></i> Download APK</a>
           <button class="btn-icon-link" onclick="reloadFrame('adminFrame')"><i class="fa-solid fa-rotate-right"></i></button>
           <a href="/admin/" target="_blank" class="btn-icon-link"><i class="fa-solid fa-arrow-up-right-from-square"></i> Fullscreen</a>
         </div>
@@ -493,6 +635,25 @@
   </div>
 
   <script>
+    function switchSimulatorDevice(type) {
+      const userCol = document.getElementById('userDeviceCol');
+      const adminCol = document.getElementById('adminDeviceCol');
+      const btnUser = document.getElementById('btnSwitchUser');
+      const btnAdmin = document.getElementById('btnSwitchAdmin');
+
+      if (type === 'user') {
+        userCol.classList.add('mobile-active');
+        adminCol.classList.remove('mobile-active');
+        btnUser.className = 'switcher-btn active user';
+        btnAdmin.className = 'switcher-btn';
+      } else {
+        adminCol.classList.add('mobile-active');
+        userCol.classList.remove('mobile-active');
+        btnAdmin.className = 'switcher-btn active admin';
+        btnUser.className = 'switcher-btn';
+      }
+    }
+
     function reloadFrames() {
       document.getElementById('userFrame').src = '/phonebook/';
       document.getElementById('adminFrame').src = '/admin/';

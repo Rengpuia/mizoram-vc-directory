@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#1a5f7a">
   <link rel="manifest" href="manifest.json">
   <link rel="icon" type="image/png" href="icon-192.png">
@@ -117,6 +117,17 @@
         </div>
       </section>
 
+      <!-- Village Councils Directory Tab -->
+      <section id="tabVillages" class="tab-page">
+        <div class="villages-header">
+          <h2 id="villagesDistrictTitle"><i class="fa-solid fa-city"></i> Kolasib Village Councils</h2>
+          <p>Tap any Village Council to view all executive members</p>
+        </div>
+        <div id="villagesList" class="villages-grid">
+          <!-- Villages dynamically rendered -->
+        </div>
+      </section>
+
       <!-- Government & District Offices Tab -->
       <section id="tabOffices" class="tab-page">
         <div class="emergency-header" style="background: linear-gradient(135deg, #1e3a8a, #0369a1);">
@@ -176,17 +187,6 @@
         </div>
       </section>
 
-      <!-- Village Councils Directory Tab -->
-      <section id="tabVillages" class="tab-page">
-        <div class="villages-header">
-          <h2 id="villagesDistrictTitle"><i class="fa-solid fa-city"></i> Kolasib Village Councils</h2>
-          <p>Tap any Village Council to view all executive members</p>
-        </div>
-        <div id="villagesList" class="villages-grid">
-          <!-- Villages dynamically rendered -->
-        </div>
-      </section>
-
       <!-- About & Info Tab -->
       <section id="tabAbout" class="tab-page">
         <div class="about-card">
@@ -236,13 +236,13 @@
         <i class="fa-solid fa-address-book"></i>
         <span>VCs</span>
       </button>
-      <button class="nav-item" onclick="switchTab('tabOffices', this)">
-        <i class="fa-solid fa-building"></i>
-        <span>Offices</span>
-      </button>
       <button class="nav-item" onclick="switchTab('tabVillages', this)">
         <i class="fa-solid fa-city"></i>
         <span>Councils</span>
+      </button>
+      <button class="nav-item" onclick="switchTab('tabOffices', this)">
+        <i class="fa-solid fa-building"></i>
+        <span>Offices</span>
       </button>
       <button class="nav-item em-nav" onclick="switchTab('tabEmergency', this)">
         <i class="fa-solid fa-phone-volume"></i>

@@ -5,9 +5,14 @@ const isLocalBrowser = ['localhost', '127.0.0.1'].includes(window.location.hostn
 const isWebHosting = window.location.protocol.startsWith('http') && 
                      !['localhost', '127.0.0.1'].includes(window.location.hostname);
 
+const _0xsec = (function() {
+  const enc = [47, 60, 61, 58, 56, 118, 98, 104, 37, 32, 48, 36, 62, 44, 42, 101, 63, 41, 102, 40, 36, 53, 45, 42, 62, 36, 62, 52, 105, 39, 39, 56, 46, 34, 41, 34, 58, 103, 41, 36, 33];
+  return enc.map((b, i) => String.fromCharCode(b ^ (0x47 + (i % 7)))).join('');
+})();
+
 const API_BASE = (isLocalBrowser || isWebHosting)
   ? window.location.origin
-  : 'https://mizoram-vc-directory.onrender.com';
+  : _0xsec;
 
 let state = {
   currentDistrict: localStorage.getItem('kolasib_selected_district') || 'Kolasib',
@@ -33,6 +38,34 @@ let state = {
   activeToastTimer: null
 };
 
+// Native System Notification Bridge (Notifies directly to Android Phone Notification Bar)
+function triggerPhoneNotification(title, message, tag) {
+  if (window.AndroidApp && typeof window.AndroidApp.showSystemNotification === 'function') {
+    window.AndroidApp.showSystemNotification(title, message, tag || 'mizoram_vc_notice');
+  } else if ('Notification' in window) {
+    if (Notification.permission === 'granted') {
+      try {
+        new Notification(title, {
+          body: message,
+          icon: 'icon-192.png',
+          badge: 'icon-192.png',
+          tag: tag || 'mizoram_vc_notice'
+        });
+      } catch (e) {}
+    } else if (Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+  }
+}
+
+function requestSystemNotificationPermission() {
+  if (window.AndroidApp && typeof window.AndroidApp.requestNotificationPermission === 'function') {
+    window.AndroidApp.requestNotificationPermission();
+  } else if ('Notification' in window && Notification.permission === 'default') {
+    Notification.requestPermission();
+  }
+}
+
 // Initialize app on DOM ready
 document.addEventListener('DOMContentLoaded', () => {
   initNetworkListeners();
@@ -42,6 +75,7 @@ document.addEventListener('DOMContentLoaded', () => {
   fetchFreshData();
   setupEventListeners();
   initSSEPushListener();
+  requestSystemNotificationPermission();
 });
 
 // -------------------------------------------------------------
@@ -184,6 +218,11 @@ async function fetchFreshData() {
       updateNotificationBadge();
       if (state.broadcasts.length > 0) {
         showBroadcast(state.broadcasts[0]);
+        const lastNotified = localStorage.getItem('kolasib_last_notified_bcast');
+        if (!lastNotified || lastNotified !== state.broadcasts[0].id) {
+          localStorage.setItem('kolasib_last_notified_bcast', state.broadcasts[0].id);
+          triggerPhoneNotification(state.broadcasts[0].title || 'Government Announcement', state.broadcasts[0].message, 'bcast_' + state.broadcasts[0].id);
+        }
       } else {
         dismissBroadcast();
       }
@@ -416,6 +455,7 @@ function initSSEPushListener() {
             updateNotificationBadge();
             renderNotificationHistory();
             showLiveToast(`📢 Notice: ${b.title}`);
+            triggerPhoneNotification(b.title || 'Official Government Notice', b.message, 'bcast_' + b.id);
           }
         }
       } catch (err) {
@@ -725,14 +765,18 @@ function highlightCard(contactId) {
 // Filters & Search
 // -------------------------------------------------------------
 function setupEventListeners() {
-  // Search input with debounce
+  // Search input with smooth 60ms debounce for 60fps typing
   const searchInput = document.getElementById('searchInput');
   const clearSearchBtn = document.getElementById('clearSearchBtn');
+  let searchDebounceTimer = null;
 
   searchInput.addEventListener('input', (e) => {
     state.searchQuery = e.target.value.trim().toLowerCase();
     clearSearchBtn.style.display = state.searchQuery ? 'block' : 'none';
-    applyFilters();
+    if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
+    searchDebounceTimer = setTimeout(() => {
+      applyFilters();
+    }, 60);
   });
 
   // Category chips
@@ -755,16 +799,21 @@ function setupEventListeners() {
     });
   }
 
-  // Office Search input
+  // Office Search input with smooth debounce
   const officeSearchInput = document.getElementById('officeSearchInput');
   const clearOfficeSearchBtn = document.getElementById('clearOfficeSearchBtn');
+  let officeDebounceTimer = null;
+
   if (officeSearchInput) {
     officeSearchInput.addEventListener('input', (e) => {
       state.officeSearchQuery = e.target.value.trim().toLowerCase();
       if (clearOfficeSearchBtn) {
         clearOfficeSearchBtn.style.display = state.officeSearchQuery ? 'block' : 'none';
       }
-      applyOfficeFilters();
+      if (officeDebounceTimer) clearTimeout(officeDebounceTimer);
+      officeDebounceTimer = setTimeout(() => {
+        applyOfficeFilters();
+      }, 60);
     });
   }
 

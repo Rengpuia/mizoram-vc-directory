@@ -265,30 +265,6 @@
       "district": "Kolasib"
     },
     {
-      "id": "v-bairabi-n",
-      "name": "Bairabi North",
-      "category": "Bairabi Area",
-      "totalMembers": 5,
-      "address": "Bairabi North",
-      "district": "Kolasib"
-    },
-    {
-      "id": "v-bairabi-s",
-      "name": "Bairabi South",
-      "category": "Bairabi Area",
-      "totalMembers": 5,
-      "address": "Bairabi South",
-      "district": "Kolasib"
-    },
-    {
-      "id": "v-bairabi-stn",
-      "name": "Bairabi Station Veng",
-      "category": "Bairabi Area",
-      "totalMembers": 5,
-      "address": "Bairabi Station",
-      "district": "Kolasib"
-    },
-    {
       "id": "v-phaisen",
       "name": "Phaisen",
       "category": "Bairabi Area",
@@ -409,14 +385,6 @@
       "address": "Khatla, Aizawl"
     },
     {
-      "id": "v-azl-chanmari",
-      "name": "Aizawl Chanmari",
-      "category": "Aizawl City",
-      "district": "Aizawl",
-      "totalMembers": 5,
-      "address": "Chanmari, Aizawl"
-    },
-    {
       "id": "v-azl-dawrpui",
       "name": "Aizawl Dawrpui",
       "category": "Aizawl City",
@@ -439,14 +407,6 @@
       "district": "Aizawl",
       "totalMembers": 5,
       "address": "Ramhlun North, Aizawl"
-    },
-    {
-      "id": "v-azl-bawngkawn",
-      "name": "Aizawl Bawngkawn",
-      "category": "Aizawl City",
-      "district": "Aizawl",
-      "totalMembers": 5,
-      "address": "Bawngkawn, Aizawl"
     },
     {
       "id": "v-azl-durtlang",
@@ -1111,62 +1071,6 @@
       "district": "Kolasib"
     },
     {
-      "id": "c-401",
-      "villageId": "v-bairabi-n",
-      "villageName": "Bairabi North",
-      "category": "Bairabi Area",
-      "name": "Lalrosanga",
-      "designation": "President (VCP)",
-      "phone": "9436156543",
-      "altPhone": "",
-      "term": "2025-2030",
-      "notes": "Railway Station border area",
-      "updatedAt": "2026-10-01T10:00:00.000Z",
-      "district": "Kolasib"
-    },
-    {
-      "id": "c-402",
-      "villageId": "v-bairabi-n",
-      "villageName": "Bairabi North",
-      "category": "Bairabi Area",
-      "name": "PC Lalmuansanga",
-      "designation": "Secretary (VCS)",
-      "phone": "9862908712",
-      "altPhone": "",
-      "term": "2025-2030",
-      "notes": "",
-      "updatedAt": "2026-10-01T10:00:00.000Z",
-      "district": "Kolasib"
-    },
-    {
-      "id": "c-403",
-      "villageId": "v-bairabi-s",
-      "villageName": "Bairabi South",
-      "category": "Bairabi Area",
-      "name": "C. Lalropuia",
-      "designation": "President (VCP)",
-      "phone": "9862456712",
-      "altPhone": "",
-      "term": "2025-2030",
-      "notes": "",
-      "updatedAt": "2026-10-01T10:00:00.000Z",
-      "district": "Kolasib"
-    },
-    {
-      "id": "c-404",
-      "villageId": "v-bairabi-s",
-      "villageName": "Bairabi South",
-      "category": "Bairabi Area",
-      "name": "Lalrammawia Sailo",
-      "designation": "Secretary (VCS)",
-      "phone": "7005876543",
-      "altPhone": "",
-      "term": "2025-2030",
-      "notes": "",
-      "updatedAt": "2026-10-01T10:00:00.000Z",
-      "district": "Kolasib"
-    },
-    {
       "id": "c-501",
       "villageId": "v-kawnpui-1",
       "villageName": "Kawnpui - I",
@@ -1310,7 +1214,7 @@
       "id": "c-azl-1",
       "name": "Pu Lalthansanga",
       "designation": "Chairman (Local Council)",
-      "phone": "8014159713",
+      "phone": "1234567890",
       "altPhone": "",
       "villageId": "v-azl-khatla",
       "villageName": "Aizawl Khatla",
@@ -1318,7 +1222,7 @@
       "district": "Aizawl",
       "term": "2025-2030",
       "notes": "LC Chairman",
-      "updatedAt": "2026-10-07T14:55:57.796Z"
+      "updatedAt": "2026-10-07T18:05:58.397Z"
     },
     {
       "id": "c-azl-2",
@@ -1328,32 +1232,6 @@
       "altPhone": "",
       "villageId": "v-azl-khatla",
       "villageName": "Aizawl Khatla",
-      "category": "Aizawl City",
-      "district": "Aizawl",
-      "term": "2025-2030",
-      "notes": "LC Secretary"
-    },
-    {
-      "id": "c-azl-3",
-      "name": "Pi R. Vanlalduhi",
-      "designation": "Chairman (Local Council)",
-      "phone": "9862140333",
-      "altPhone": "",
-      "villageId": "v-azl-chanmari",
-      "villageName": "Aizawl Chanmari",
-      "category": "Aizawl City",
-      "district": "Aizawl",
-      "term": "2025-2030",
-      "notes": "LC Chairman"
-    },
-    {
-      "id": "c-azl-4",
-      "name": "Pu Lalbiakkima",
-      "designation": "Secretary (Local Council)",
-      "phone": "9436150444",
-      "altPhone": "",
-      "villageId": "v-azl-chanmari",
-      "villageName": "Aizawl Chanmari",
       "category": "Aizawl City",
       "district": "Aizawl",
       "term": "2025-2030",
@@ -1376,14 +1254,15 @@
       "id": "c-azl-6",
       "name": "Pu Lalrinawma",
       "designation": "Chairman (Local Council)",
-      "phone": "9436140666",
+      "phone": "9436140665",
       "altPhone": "",
       "villageId": "v-azl-missionveng",
       "villageName": "Aizawl Mission Veng",
       "category": "Aizawl City",
       "district": "Aizawl",
       "term": "2025-2030",
-      "notes": "LC Chairman"
+      "notes": "LC Chairman",
+      "updatedAt": "2026-10-07T18:06:55.846Z"
     },
     {
       "id": "c-azl-7",
@@ -1397,19 +1276,6 @@
       "district": "Aizawl",
       "term": "2025-2030",
       "notes": "LC Chairman"
-    },
-    {
-      "id": "c-azl-8",
-      "name": "Pu Lalnuntluanga",
-      "designation": "Chairman (Local Council)",
-      "phone": "9436140888",
-      "altPhone": "",
-      "villageId": "v-azl-bawngkawn",
-      "villageName": "Aizawl Bawngkawn",
-      "category": "Aizawl City",
-      "district": "Aizawl",
-      "term": "2025-2030",
-      "notes": "Bawngkawn Junction LC"
     },
     {
       "id": "c-lgl-1",
@@ -1627,17 +1493,6 @@
       "phone": "03837220038",
       "altPhone": "03837220042",
       "address": "Hospital Veng, Kolasib",
-      "priority": 1,
-      "district": "Kolasib"
-    },
-    {
-      "id": "em-6",
-      "service": "108 Ambulance Service",
-      "category": "Health & Medical",
-      "officer": "Emergency Medical Response Service",
-      "phone": "108",
-      "altPhone": "102",
-      "address": "District Hospital Campus, Kolasib",
       "priority": 1,
       "district": "Kolasib"
     },
@@ -1973,6 +1828,125 @@
     }
   ],
   "auditLogs": [
+    {
+      "id": "log-1791396415846-539",
+      "action": "UPDATE_CONTACT",
+      "details": "Updated Pu Lalrinawma (Aizawl Mission Veng): phone: 9436140666 -> 9436140665",
+      "targetId": "c-azl-6",
+      "timestamp": "2026-10-07T18:06:55.846Z"
+    },
+    {
+      "id": "log-1791396358397-833",
+      "action": "UPDATE_CONTACT",
+      "details": "Updated Pu Lalthansanga (Aizawl Khatla): phone: 8014159713 -> 1234567890",
+      "targetId": "c-azl-1",
+      "timestamp": "2026-10-07T18:05:58.397Z"
+    },
+    {
+      "id": "log-1791396142951-987",
+      "action": "DELETE_VILLAGE",
+      "details": "Removed Council: Bairabi Station Veng [Kolasib] (0 contacts removed)",
+      "targetId": "v-bairabi-stn",
+      "timestamp": "2026-10-07T18:02:22.951Z"
+    },
+    {
+      "id": "log-1791396074133-905",
+      "action": "DELETE_BROADCAST",
+      "details": "Deleted Broadcast [Kolasib]: Test Delete Notice",
+      "targetId": "bcast-1791396074129",
+      "timestamp": "2026-10-07T18:01:14.133Z"
+    },
+    {
+      "id": "log-1791396074129-554",
+      "action": "SEND_BROADCAST",
+      "details": "Broadcast sent [Kolasib]: Test Delete Notice",
+      "targetId": "bcast-1791396074129",
+      "timestamp": "2026-10-07T18:01:14.129Z"
+    },
+    {
+      "id": "log-1791396001036-100",
+      "action": "SEND_BROADCAST",
+      "details": "Broadcast sent [Kolasib]: VC xdgdd",
+      "targetId": "bcast-1791396001036",
+      "timestamp": "2026-10-07T18:00:01.036Z"
+    },
+    {
+      "id": "log-1791395198985-360",
+      "action": "DELETE_VILLAGE",
+      "details": "Removed Council: Test Cascade Council [Kolasib] (1 contacts removed)",
+      "targetId": "v-1791395198982",
+      "timestamp": "2026-10-07T17:46:38.985Z"
+    },
+    {
+      "id": "log-1791395198983-413",
+      "action": "ADD_CONTACT",
+      "details": "Added contact Test Member 1 (undefined) for Test Cascade Council [Kolasib]",
+      "targetId": "c-1791395198983",
+      "timestamp": "2026-10-07T17:46:38.983Z"
+    },
+    {
+      "id": "log-1791395198982-915",
+      "action": "CREATE_VILLAGE",
+      "details": "Created Council: Test Cascade Council [Kolasib] (Village Council)",
+      "targetId": "v-1791395198982",
+      "timestamp": "2026-10-07T17:46:38.982Z"
+    },
+    {
+      "id": "log-1791395189071-16",
+      "action": "DELETE_VILLAGE",
+      "details": "Removed Council: Test Council X [Kolasib] (0 contacts removed)",
+      "targetId": "v-1791395189068",
+      "timestamp": "2026-10-07T17:46:29.071Z"
+    },
+    {
+      "id": "log-1791395189068-926",
+      "action": "CREATE_VILLAGE",
+      "details": "Created Council: Test Council X [Kolasib] (Village Council)",
+      "targetId": "v-1791395189068",
+      "timestamp": "2026-10-07T17:46:29.068Z"
+    },
+    {
+      "id": "log-1791395071796-953",
+      "action": "DELETE_VILLAGE",
+      "details": "Removed Council: Aizawl Chanmari [Aizawl]",
+      "targetId": "v-azl-chanmari",
+      "timestamp": "2026-10-07T17:44:31.796Z"
+    },
+    {
+      "id": "log-1791395068598-762",
+      "action": "DELETE_VILLAGE",
+      "details": "Removed Council: Aizawl Bawngkawn [Aizawl]",
+      "targetId": "v-azl-bawngkawn",
+      "timestamp": "2026-10-07T17:44:28.598Z"
+    },
+    {
+      "id": "log-1791394856605-829",
+      "action": "DELETE_VILLAGE",
+      "details": "Removed Council: Bairabi South [Kolasib]",
+      "targetId": "v-bairabi-s",
+      "timestamp": "2026-10-07T17:40:56.605Z"
+    },
+    {
+      "id": "log-1791394391157-326",
+      "action": "DELETE_OFFICE_STAFF",
+      "details": "Removed staff Pu Robert C. Lalhmangaiha, IAS from Deputy Commissioner's Office (DC Office)",
+      "targetId": "off-dc",
+      "timestamp": "2026-10-07T17:33:11.157Z"
+    },
+    {
+      "id": "log-1791394378120-59",
+      "action": "DELETE_EMERGENCY",
+      "details": "Deleted emergency service 108 Ambulance Service",
+      "targetId": "em-6",
+      "timestamp": "2026-10-07T17:32:58.120Z"
+    },
+    {
+      "id": "log-1791394358120-880",
+      "action": "DELETE_VILLAGE",
+      "details": "Removed Council: Bairabi North [Kolasib]",
+      "targetId": "v-bairabi-n",
+      "timestamp": "2026-10-07T17:32:38.120Z"
+    },
     {
       "id": "log-1791384957798-324",
       "action": "RESOLVE_REPORT",
@@ -2324,6 +2298,244 @@
     }
   ],
   "pushHistory": [
+    {
+      "id": "push-1791396415846",
+      "type": "CONTACT_UPDATED",
+      "payload": {
+        "id": "c-azl-6",
+        "name": "Pu Lalrinawma",
+        "designation": "Chairman (Local Council)",
+        "phone": "9436140665",
+        "altPhone": "",
+        "villageId": "v-azl-missionveng",
+        "villageName": "Aizawl Mission Veng",
+        "category": "Aizawl City",
+        "district": "Aizawl",
+        "term": "2025-2030",
+        "notes": "LC Chairman",
+        "updatedAt": "2026-10-07T18:06:55.846Z"
+      },
+      "timestamp": "2026-10-07T18:06:55.846Z"
+    },
+    {
+      "id": "push-1791396358397",
+      "type": "CONTACT_UPDATED",
+      "payload": {
+        "id": "c-azl-1",
+        "name": "Pu Lalthansanga",
+        "designation": "Chairman (Local Council)",
+        "phone": "1234567890",
+        "altPhone": "",
+        "villageId": "v-azl-khatla",
+        "villageName": "Aizawl Khatla",
+        "category": "Aizawl City",
+        "district": "Aizawl",
+        "term": "2025-2030",
+        "notes": "LC Chairman",
+        "updatedAt": "2026-10-07T18:05:58.397Z"
+      },
+      "timestamp": "2026-10-07T18:05:58.397Z"
+    },
+    {
+      "id": "push-1791396142951",
+      "type": "VILLAGE_DELETED",
+      "payload": {
+        "id": "v-bairabi-stn",
+        "name": "Bairabi Station Veng",
+        "district": "Kolasib",
+        "removedContactsCount": 0
+      },
+      "timestamp": "2026-10-07T18:02:22.951Z"
+    },
+    {
+      "id": "push-1791396074133",
+      "type": "BROADCAST_DELETED",
+      "payload": {
+        "id": "bcast-1791396074129",
+        "title": "Test Delete Notice"
+      },
+      "timestamp": "2026-10-07T18:01:14.133Z"
+    },
+    {
+      "id": "push-1791396074129",
+      "type": "BROADCAST_ALERT",
+      "payload": {
+        "id": "bcast-1791396074129",
+        "title": "Test Delete Notice",
+        "message": "This should be deleted",
+        "priority": "normal",
+        "district": "Kolasib",
+        "createdAt": "2026-10-07T18:01:14.129Z"
+      },
+      "timestamp": "2026-10-07T18:01:14.129Z"
+    },
+    {
+      "id": "push-1791396001036",
+      "type": "BROADCAST_ALERT",
+      "payload": {
+        "id": "bcast-1791396001036",
+        "title": "VC xdgdd",
+        "message": "tgyre hetrg",
+        "priority": "normal",
+        "district": "Kolasib",
+        "createdAt": "2026-10-07T18:00:01.036Z"
+      },
+      "timestamp": "2026-10-07T18:00:01.036Z"
+    },
+    {
+      "id": "push-1791395198985",
+      "type": "VILLAGE_DELETED",
+      "payload": {
+        "id": "v-1791395198982",
+        "name": "Test Cascade Council",
+        "district": "Kolasib",
+        "removedContactsCount": 1
+      },
+      "timestamp": "2026-10-07T17:46:38.985Z"
+    },
+    {
+      "id": "push-1791395198983",
+      "type": "CONTACT_ADDED",
+      "payload": {
+        "name": "Test Member 1",
+        "phone": "9999988888",
+        "villageId": "v-1791395198982",
+        "villageName": "Test Cascade Council",
+        "district": "Kolasib",
+        "id": "c-1791395198983",
+        "updatedAt": "2026-10-07T17:46:38.983Z"
+      },
+      "timestamp": "2026-10-07T17:46:38.983Z"
+    },
+    {
+      "id": "push-1791395198982",
+      "type": "VILLAGE_ADDED",
+      "payload": {
+        "id": "v-1791395198982",
+        "name": "Test Cascade Council",
+        "category": "Town Area",
+        "district": "Kolasib",
+        "type": "Village Council",
+        "totalMembers": 5,
+        "address": "Test Cascade Council, Kolasib"
+      },
+      "timestamp": "2026-10-07T17:46:38.982Z"
+    },
+    {
+      "id": "push-1791395189071",
+      "type": "VILLAGE_DELETED",
+      "payload": {
+        "id": "v-1791395189068",
+        "name": "Test Council X",
+        "district": "Kolasib",
+        "removedContactsCount": 0
+      },
+      "timestamp": "2026-10-07T17:46:29.071Z"
+    },
+    {
+      "id": "push-1791395189068",
+      "type": "VILLAGE_ADDED",
+      "payload": {
+        "id": "v-1791395189068",
+        "name": "Test Council X",
+        "category": "Kolasib Town",
+        "district": "Kolasib",
+        "type": "Village Council",
+        "totalMembers": 5,
+        "address": "Test Council X, Kolasib"
+      },
+      "timestamp": "2026-10-07T17:46:29.068Z"
+    },
+    {
+      "id": "push-1791395071796",
+      "type": "VILLAGE_DELETED",
+      "payload": {
+        "id": "v-azl-chanmari",
+        "name": "Aizawl Chanmari",
+        "district": "Aizawl"
+      },
+      "timestamp": "2026-10-07T17:44:31.796Z"
+    },
+    {
+      "id": "push-1791395068598",
+      "type": "VILLAGE_DELETED",
+      "payload": {
+        "id": "v-azl-bawngkawn",
+        "name": "Aizawl Bawngkawn",
+        "district": "Aizawl"
+      },
+      "timestamp": "2026-10-07T17:44:28.598Z"
+    },
+    {
+      "id": "push-1791394856605",
+      "type": "VILLAGE_DELETED",
+      "payload": {
+        "id": "v-bairabi-s",
+        "name": "Bairabi South",
+        "district": "Kolasib"
+      },
+      "timestamp": "2026-10-07T17:40:56.605Z"
+    },
+    {
+      "id": "push-1791394391157",
+      "type": "OFFICE_UPDATED",
+      "payload": {
+        "id": "off-dc",
+        "name": "Deputy Commissioner's Office (DC Office)",
+        "department": "District Administration",
+        "category": "Administration",
+        "address": "DC Office Complex, Project Veng, Kolasib - 796081",
+        "phone": "03837220002",
+        "email": "dckolasib@mizoram.gov.in",
+        "staff": [
+          {
+            "id": "stf-dc-2",
+            "name": "Pi Lalrinchhani, MCS",
+            "designation": "Addl. Deputy Commissioner (ADC)",
+            "phone": "9436141234",
+            "altPhone": "",
+            "email": "adc.kolasib@gmail.com"
+          },
+          {
+            "id": "stf-dc-3",
+            "name": "Pu Lalthlamuana, MCS",
+            "designation": "Sub-Divisional Officer (SDO Sadar)",
+            "phone": "9436152345",
+            "altPhone": "",
+            "email": "sdosadar.klb@gmail.com"
+          },
+          {
+            "id": "stf-dc-4",
+            "name": "Pu C. Lalhminghlua, MCS",
+            "designation": "Election Officer / DUDO",
+            "phone": "9612345678",
+            "altPhone": "",
+            "email": "eo.kolasib@gmail.com"
+          }
+        ],
+        "district": "Kolasib"
+      },
+      "timestamp": "2026-10-07T17:33:11.157Z"
+    },
+    {
+      "id": "push-1791394378120",
+      "type": "EMERGENCY_DELETED",
+      "payload": {
+        "id": "em-6",
+        "service": "108 Ambulance Service"
+      },
+      "timestamp": "2026-10-07T17:32:58.120Z"
+    },
+    {
+      "id": "push-1791394358120",
+      "type": "VILLAGE_DELETED",
+      "payload": {
+        "id": "v-bairabi-n",
+        "name": "Bairabi North",
+        "district": "Kolasib"
+      },
+      "timestamp": "2026-10-07T17:32:38.120Z"
+    },
     {
       "id": "push-1791384957797",
       "type": "CONTACT_UPDATED",
@@ -2920,6 +3132,14 @@
   ],
   "broadcasts": [
     {
+      "id": "bcast-1791396001036",
+      "title": "VC xdgdd",
+      "message": "tgyre hetrg",
+      "priority": "normal",
+      "district": "Kolasib",
+      "createdAt": "2026-10-07T18:00:01.036Z"
+    },
+    {
       "id": "bcast-1791383041801",
       "title": "Aizawl District Notice",
       "message": "Notice regarding local council voter list revision in Aizawl.",
@@ -2969,7 +3189,7 @@
     }
   ],
   "meta": {
-    "lastUpdated": "2026-10-07T14:55:57.798Z",
+    "lastUpdated": "2026-10-07T18:06:55.846Z",
     "version": 1
   },
   "offices": [
@@ -2982,14 +3202,6 @@
       "phone": "03837220002",
       "email": "dckolasib@mizoram.gov.in",
       "staff": [
-        {
-          "id": "stf-dc-1",
-          "name": "Pu Robert C. Lalhmangaiha, IAS",
-          "designation": "GGGGGG",
-          "phone": "9862345678",
-          "altPhone": "03837220002",
-          "email": "dc-kolasib@nic.in"
-        },
         {
           "id": "stf-dc-2",
           "name": "Pi Lalrinchhani, MCS",

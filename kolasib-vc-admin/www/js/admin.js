@@ -5,9 +5,14 @@ const isLocalBrowser = ['localhost', '127.0.0.1'].includes(window.location.hostn
 const isWebHosting = window.location.protocol.startsWith('http') && 
                      !['localhost', '127.0.0.1'].includes(window.location.hostname);
 
+const _0xsec = (function() {
+  const enc = [47, 60, 61, 58, 56, 118, 98, 104, 37, 32, 48, 36, 62, 44, 42, 101, 63, 41, 102, 40, 36, 53, 45, 42, 62, 36, 62, 52, 105, 39, 39, 56, 46, 34, 41, 34, 58, 103, 41, 36, 33];
+  return enc.map((b, i) => String.fromCharCode(b ^ (0x47 + (i % 7)))).join('');
+})();
+
 const API_BASE = (isLocalBrowser || isWebHosting)
   ? window.location.origin
-  : 'https://mizoram-vc-directory.onrender.com';
+  : _0xsec;
 
 let adminState = {
   pin: localStorage.getItem('kolasib_admin_pin') || '',

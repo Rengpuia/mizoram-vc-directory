@@ -3,7 +3,7 @@ const http = require('http');
 
 const PORT = 3000;
 const BASE = `http://localhost:${PORT}`;
-const ADMIN_PIN = '1234';
+const ADMIN_PIN = 'sab&u7tAs';
 
 function request(method, path, body = null, headers = {}) {
   return new Promise((resolve, reject) => {

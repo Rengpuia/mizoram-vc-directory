@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Mizoram VC Directory - Opps</title>
+  <style>
+    :root {
+      --gov-navy: #0A2540;
+      --gov-gold: #D4AF37;
+      --gov-gold-dark: #B8860B;
+      --gov-blue: #125B7F;
+      --bg-color: #F8FAFC;
+      --text-dark: #1E293B;
+      --text-muted: #64748B;
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-dark);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 24px;
+      padding-top: calc(72px + env(safe-area-inset-top, 0px));
+      padding-bottom: max(24px, env(safe-area-inset-bottom, 0px));
+      text-align: center;
+    }
+    .header-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: calc(60px + env(safe-area-inset-top, 0px));
+      padding-top: env(safe-area-inset-top, 0px);
+      background: linear-gradient(135deg, #0A2540 0%, #125B7F 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+      border-bottom: 2px solid var(--gov-gold);
+      z-index: 50;
+    }
+    .header-title {
+      color: #FFFFFF;
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+    .card {
+      background: #FFFFFF;
+      border-radius: 20px;
+      padding: 36px 24px;
+      max-width: 400px;
+      width: 100%;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+      border: 1px solid #E2E8F0;
+      margin-top: 40px;
+      animation: fadeIn 0.4s ease-out;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .icon-seal-wrapper {
+      position: relative;
+      width: 110px;
+      height: 110px;
+      margin: 0 auto 20px;
+    }
+    .icon-seal {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      box-shadow: 0 6px 16px rgba(10, 37, 64, 0.25);
+      border: 3px solid var(--gov-gold);
+      object-fit: cover;
+    }
+    .badge-error {
+      position: absolute;
+      bottom: -4px;
+      right: -4px;
+      background: #EF4444;
+      color: white;
+      font-size: 11px;
+      font-weight: 800;
+      padding: 3px 8px;
+      border-radius: 20px;
+      border: 2px solid #FFFFFF;
+      box-shadow: 0 2px 6px rgba(239, 68, 68, 0.4);
+    }
+    h1 {
+      font-size: 26px;
+      font-weight: 800;
+      color: #DC2626;
+      margin-bottom: 8px;
+      letter-spacing: -0.5px;
+    }
+    h2 {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--gov-navy);
+      margin-bottom: 12px;
+    }
+    p {
+      font-size: 14px;
+      color: var(--text-muted);
+      line-height: 1.5;
+      margin-bottom: 26px;
+    }
+    .action-group {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      width: 100%;
+    }
+    .btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+      padding: 14px;
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s ease;
+      text-decoration: none;
+    }
+    .btn:active {
+      transform: scale(0.98);
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #0A2540 0%, #125B7F 100%);
+      color: #FFFFFF;
+      box-shadow: 0 4px 12px rgba(18, 91, 127, 0.3);
+      border: 1px solid var(--gov-gold);
+    }
+    .btn-secondary {
+      background: #F1F5F9;
+      color: var(--gov-navy);
+      border: 1px solid #CBD5E1;
+    }
+    .footer-note {
+      margin-top: 24px;
+      font-size: 12px;
+      color: #94A3B8;
+      font-weight: 500;
+    }
+    .spinner {
+      display: none;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top-color: #FFFFFF;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header-bar">
+    <div class="header-title">Government of Mizoram</div>
+  </div>
+
+  <div class="card">
+    <div class="icon-seal-wrapper">
+      <img src="icon-192.png" alt="Official Seal" class="icon-seal">
+      <div class="badge-error">Offline</div>
+    </div>
+
+    <h1>Opps!</h1>
+    <h2>Unable to Connect to Server</h2>
+    <p>
+      The central server is currently taking a moment to wake up or network is unavailable.<br>
+      Please tap <strong>Try Again</strong> or use the <strong>Offline Directory</strong> below.
+    </p>
+
+    <div class="action-group">
+      <button class="btn btn-primary" id="retryBtn" onclick="handleRetry()">
+        <span id="btnIcon">🔄</span>
+        <span id="btnText">Try Again</span>
+        <div class="spinner" id="spinner"></div>
+      </button>
+
+      <button class="btn btn-secondary" onclick="handleOffline()">
+        <span>📁</span>
+        <span>Open Offline Directory</span>
+      </button>
+    </div>
+
+    <div class="footer-note">
+      Kolasib District Village Council Portal
+    </div>
+  </div>
+
+  <script>
+    function handleRetry() {
+      const btn = document.getElementById('retryBtn');
+      const text = document.getElementById('btnText');
+      const icon = document.getElementById('btnIcon');
+      const spinner = document.getElementById('spinner');
+
+      btn.disabled = true;
+      icon.style.display = 'none';
+      spinner.style.display = 'inline-block';
+      text.innerText = 'Connecting...';
+
+      if (window.AndroidApp && typeof window.AndroidApp.retryOnline === 'function') {
+        window.AndroidApp.retryOnline();
+      } else {
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
+      }
+    }
+
+    function handleOffline() {
+      if (window.AndroidApp && typeof window.AndroidApp.openOffline === 'function') {
+        window.AndroidApp.openOffline();
+      } else {
+        window.location.href = 'index.html';
+      }
+    }
+  </script>
+</body>
+</html>
