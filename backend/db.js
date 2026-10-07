@@ -106,6 +106,21 @@ class Database {
           needsSave = true;
         }
 
+        // Clean orphan contacts whose council was deleted
+        const validVillages = new Set(this.data.villages.map(v => v.name.toLowerCase()));
+        const validVillageIds = new Set(this.data.villages.map(v => v.id));
+        const beforeOrphanFilter = this.data.contacts.length;
+        this.data.contacts = this.data.contacts.filter(c => {
+          if (!c.villageId && !c.villageName) return true;
+          const hasId = c.villageId && validVillageIds.has(c.villageId);
+          const hasName = c.villageName && validVillages.has(c.villageName.toLowerCase());
+          return hasId || hasName;
+        });
+        if (this.data.contacts.length !== beforeOrphanFilter) {
+          needsSave = true;
+          console.log(`Cleaned up ${beforeOrphanFilter - this.data.contacts.length} orphan contacts from deleted councils.`);
+        }
+
         if (needsSave) {
           this.save();
         }
@@ -181,6 +196,30 @@ class Database {
           message: 'Official directory for Village Councils and Local Councils across Mizoram districts.',
           priority: 'normal',
           district: 'All',
+          createdAt: new Date(Date.now() - 3 * 86400000).toISOString()
+        },
+        {
+          id: 'bcast-2',
+          title: 'Village Council Directory Updated',
+          message: 'All elected Local and Village Council executives verified by District Administration.',
+          priority: 'normal',
+          district: 'All',
+          createdAt: new Date(Date.now() - 2 * 86400000).toISOString()
+        },
+        {
+          id: 'bcast-3',
+          title: 'Emergency Helpline Numbers Active',
+          message: 'District Disaster Management, Police and Health helplines are available 24/7 on the Emergency tab.',
+          priority: 'normal',
+          district: 'All',
+          createdAt: new Date(Date.now() - 86400000).toISOString()
+        },
+        {
+          id: 'bcast-4',
+          title: 'Real-Time Sync & Error Reporting',
+          message: 'Notice any outdated contact? Use the Report Error button on any contact card to submit quick corrections.',
+          priority: 'normal',
+          district: 'All',
           createdAt: new Date().toISOString()
         }
       ],
@@ -205,7 +244,14 @@ class Database {
 
   // --- Districts ---
   getDistricts() {
-    return this.data.districts && this.data.districts.length > 0 ? this.data.districts : initialDistricts;
+    const list = this.data.districts && this.data.districts.length > 0 ? this.data.districts : initialDistricts;
+    return list.map(d => {
+      const actualCount = (this.data.villages || []).filter(v => (v.district || 'Kolasib').toLowerCase() === d.name.toLowerCase()).length;
+      return {
+        ...d,
+        totalVCs: actualCount > 0 ? actualCount : (d.totalVCs || 0)
+      };
+    });
   }
 
   addDistrict(districtData) {
@@ -254,13 +300,26 @@ class Database {
   }
 
   deleteVillage(id) {
-    const idx = this.data.villages.findIndex(v => v.id === id);
+    const idx = this.data.villages.findIndex(v => v.id === id || v.name.toLowerCase() === id.toLowerCase());
     if (idx === -1) return null;
     const deleted = this.data.villages.splice(idx, 1)[0];
-    this.addAudit('DELETE_VILLAGE', `Removed Council: ${deleted.name} [${deleted.district}]`, id);
-    this.recordPush('VILLAGE_DELETED', { id, name: deleted.name, district: deleted.district });
+
+    // Cascade remove contacts associated with this deleted council
+    const initialContactsCount = this.data.contacts.length;
+    this.data.contacts = this.data.contacts.filter(c => {
+      const matchId = c.villageId && (c.villageId === deleted.id || c.villageId === id);
+      const matchName = c.villageName && (
+        c.villageName.toLowerCase() === deleted.name.toLowerCase() || 
+        c.villageName.toLowerCase() === id.toLowerCase()
+      );
+      return !matchId && !matchName;
+    });
+    const removedContactsCount = initialContactsCount - this.data.contacts.length;
+
+    this.addAudit('DELETE_VILLAGE', `Removed Council: ${deleted.name} [${deleted.district}] (${removedContactsCount} contacts removed)`, id);
+    this.recordPush('VILLAGE_DELETED', { id: deleted.id, name: deleted.name, district: deleted.district, removedContactsCount });
     this.save();
-    return deleted;
+    return { ...deleted, removedContactsCount };
   }
 
   // --- App & Developer Information ---
@@ -667,6 +726,17 @@ class Database {
     this.recordPush('BROADCAST_ALERT', newBroadcast);
     this.save();
     return newBroadcast;
+  }
+
+  deleteBroadcast(id) {
+    if (!this.data.broadcasts) return null;
+    const idx = this.data.broadcasts.findIndex(b => b.id === id);
+    if (idx === -1) return null;
+    const deleted = this.data.broadcasts.splice(idx, 1)[0];
+    this.addAudit('DELETE_BROADCAST', `Deleted Broadcast [${deleted.district}]: ${deleted.title}`, id);
+    this.recordPush('BROADCAST_DELETED', { id, title: deleted.title });
+    this.save();
+    return deleted;
   }
 
   // --- Push Updates & Audit Logs ---

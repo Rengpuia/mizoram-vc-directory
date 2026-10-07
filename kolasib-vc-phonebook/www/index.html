@@ -26,6 +26,10 @@
           </div>
         </div>
         <div class="header-actions">
+          <button class="btn-notification-history" id="btnNotificationHistory" onclick="openNotificationHistoryModal()" title="Notification History">
+            <i class="fa-solid fa-bell"></i>
+            <span class="notification-badge-count" id="notificationBadgeCount" style="display: none;">0</span>
+          </button>
           <button class="district-badge-btn" id="districtSelectBtn" onclick="openDistrictModal()" title="Switch District">
             <i class="fa-solid fa-location-dot"></i>
             <span id="currentDistrictText">Kolasib</span>
@@ -41,9 +45,12 @@
       <!-- Live Broadcast Alert Banner (if any) -->
       <div class="broadcast-banner" id="broadcastBanner" style="display: none;">
         <i class="fa-solid fa-bullhorn banner-icon"></i>
-        <div class="banner-content">
+        <div class="banner-content" style="flex: 1;">
           <strong id="broadcastTitle">District Announcement</strong>
           <p id="broadcastMsg"></p>
+          <button class="banner-history-link" onclick="openNotificationHistoryModal()">
+            <i class="fa-solid fa-clock-rotate-left"></i> View History
+          </button>
         </div>
         <button class="banner-close" onclick="dismissBroadcast()"><i class="fa-solid fa-xmark"></i></button>
       </div>
@@ -172,7 +179,7 @@
       <!-- Village Councils Directory Tab -->
       <section id="tabVillages" class="tab-page">
         <div class="villages-header">
-          <h2><i class="fa-solid fa-city"></i> Kolasib Village Councils (60)</h2>
+          <h2 id="villagesDistrictTitle"><i class="fa-solid fa-city"></i> Kolasib Village Councils</h2>
           <p>Tap any Village Council to view all executive members</p>
         </div>
         <div id="villagesList" class="villages-grid">
@@ -310,6 +317,27 @@
             </button>
           </div>
         </form>
+      </div>
+    </div>
+
+    <!-- Notification History Modal -->
+    <div id="notificationHistoryModal" class="modal-backdrop" style="display: none;">
+      <div class="modal-box" style="max-width: 480px; width: 92%; max-height: 85vh; display: flex; flex-direction: column;">
+        <div class="modal-header">
+          <div class="modal-title-group">
+            <i class="fa-solid fa-bell" style="color: var(--primary);"></i>
+            <div>
+              <h3>Notification History</h3>
+              <p style="font-size: 12px; color: #64748b; margin: 0;" id="notificationHistorySubtitle">Recent announcements &amp; notices</p>
+            </div>
+          </div>
+          <button class="modal-close" onclick="closeNotificationHistoryModal()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="modal-body" style="padding: 14px 16px; overflow-y: auto; flex: 1;">
+          <div id="notificationHistoryList" class="notification-history-list" style="display: flex; flex-direction: column; gap: 12px;">
+            <!-- Dynamically populated notifications -->
+          </div>
+        </div>
       </div>
     </div>
 

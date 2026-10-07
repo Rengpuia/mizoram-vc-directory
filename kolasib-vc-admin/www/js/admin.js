@@ -1,7 +1,13 @@
 // Mizoram VC Admin App - Application Logic (Multi-District Control)
 // Handles PIN Authentication, Multi-District Management, Live Push Updates & Citizen Reports
 
-const API_BASE = window.location.origin;
+const isLocalBrowser = ['localhost', '127.0.0.1'].includes(window.location.hostname) && window.location.port !== '';
+const isWebHosting = window.location.protocol.startsWith('http') && 
+                     !['localhost', '127.0.0.1'].includes(window.location.hostname);
+
+const API_BASE = (isLocalBrowser || isWebHosting)
+  ? window.location.origin
+  : 'https://mizoram-vc-directory.onrender.com';
 
 let adminState = {
   pin: localStorage.getItem('kolasib_admin_pin') || '',
@@ -13,6 +19,7 @@ let adminState = {
   offices: [],
   reports: [],
   auditLogs: [],
+  broadcasts: [],
   stats: {},
   appInfo: null,
   filterCategory: 'All',
@@ -168,7 +175,7 @@ async function fetchAdminData() {
   try {
     const headers = { 'X-Admin-PIN': adminState.pin };
 
-    const [contactsRes, emergencyRes, officesRes, reportsRes, statsRes, auditRes, villagesRes, appInfoRes] = await Promise.all([
+    const [contactsRes, emergencyRes, officesRes, reportsRes, statsRes, auditRes, villagesRes, appInfoRes, bcastsRes] = await Promise.all([
       fetch(`${API_BASE}/api/contacts`).then(r => r.json()),
       fetch(`${API_BASE}/api/emergency`).then(r => r.json()),
       fetch(`${API_BASE}/api/offices`).then(r => r.json()),
@@ -176,8 +183,14 @@ async function fetchAdminData() {
       fetch(`${API_BASE}/api/admin/stats`, { headers }).then(r => r.json()),
       fetch(`${API_BASE}/api/admin/audit-logs`, { headers }).then(r => r.json()),
       fetch(`${API_BASE}/api/villages`).then(r => r.json()).catch(() => ({ success: false })),
-      fetch(`${API_BASE}/api/app-info`).then(r => r.json()).catch(() => ({ success: false }))
+      fetch(`${API_BASE}/api/app-info`).then(r => r.json()).catch(() => ({ success: false })),
+      fetch(`${API_BASE}/api/broadcasts`).then(r => r.json()).catch(() => ({ success: false }))
     ]);
+
+    if (bcastsRes && bcastsRes.success && bcastsRes.data) {
+      adminState.broadcasts = bcastsRes.data;
+      renderAdminBroadcasts();
+    }
 
     if (contactsRes.success) {
       adminState.contacts = contactsRes.data;
@@ -285,6 +298,15 @@ function initAdminSSE() {
 
     sse.addEventListener('app_info_updated', (e) => {
       showAdminToast(`ℹ️ Developer info updated & pushed`);
+      fetchAdminData();
+    });
+
+    sse.addEventListener('broadcast_received', (e) => {
+      fetchAdminData();
+    });
+
+    sse.addEventListener('broadcast_deleted', (e) => {
+      showAdminToast(`🗑️ Notice deleted`);
       fetchAdminData();
     });
   } catch (e) {
@@ -743,11 +765,91 @@ async function submitBroadcast(e) {
       showAdminToast(`📢 Announcement pushed${district && district !== 'All' ? ' to ' + district : ' to all active Phonebooks'}!`);
       document.getElementById('bcastTitle').value = '';
       document.getElementById('bcastMessage').value = '';
+      fetchAdminData();
     } else {
       alert(`Error: ${res.error}`);
     }
   } catch (e) {
     alert('Failed to broadcast.');
+  }
+}
+
+function renderAdminBroadcasts() {
+  const container = document.getElementById('adminBroadcastsList');
+  const countBadge = document.getElementById('adminBroadcastCountBadge');
+  if (!container) return;
+
+  const list = adminState.broadcasts || [];
+  if (countBadge) {
+    countBadge.textContent = `${list.length} Active`;
+  }
+
+  if (list.length === 0) {
+    container.innerHTML = `
+      <div style="text-align:center; padding:24px; color:#94a3b8; font-size:0.85rem; background:rgba(255,255,255,0.02); border-radius:8px; border:1px dashed #334155;">
+        <i class="fa-solid fa-bullhorn" style="font-size:1.6rem; margin-bottom:8px; color:#64748b; display:block;"></i>
+        <span>No active announcements sent yet. Use the form above to push a notice.</span>
+      </div>
+    `;
+    return;
+  }
+
+  const html = list.map(b => {
+    const isUrgent = b.priority === 'urgent';
+    const dateStr = b.createdAt ? new Date(b.createdAt).toLocaleString('en-IN', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    }) : 'Recent';
+
+    return `
+      <div class="admin-contact-card" style="padding:14px; margin-bottom:10px; border-left: 4px solid ${isUrgent ? '#ef4444' : '#38bdf8'}; background:#1e293b; border-radius:8px;">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px;">
+          <div style="flex:1;">
+            <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:6px;">
+              <span style="font-size:0.72rem; padding:2px 8px; border-radius:4px; font-weight:700; background:${isUrgent ? 'rgba(239,68,68,0.2)' : 'rgba(56,189,248,0.18)'}; color:${isUrgent ? '#ef4444' : '#38bdf8'};">
+                <i class="fa-solid ${isUrgent ? 'fa-triangle-exclamation' : 'fa-bullhorn'}"></i> ${isUrgent ? 'Urgent Alert' : 'Normal Notice'}
+              </span>
+              <span class="district-badge" style="font-size:0.72rem; padding:2px 8px;"><i class="fa-solid fa-location-dot"></i> ${escapeHtml(b.district || 'All Districts')}</span>
+              <span style="font-size:0.72rem; color:#94a3b8;"><i class="fa-solid fa-clock"></i> ${escapeHtml(dateStr)}</span>
+            </div>
+            <h4 style="font-size:0.95rem; font-weight:700; color:#f8fafc; margin:4px 0 6px 0;">${escapeHtml(b.title)}</h4>
+            <p style="font-size:0.84rem; color:#cbd5e1; margin:0; line-height:1.45;">${escapeHtml(b.message)}</p>
+          </div>
+          <button class="btn-card-del" onclick="deleteBroadcastConfirm('${b.id}')" title="Delete Announcement" style="padding:6px 12px; font-size:0.78rem; white-space:nowrap; align-self:flex-start;">
+            <i class="fa-solid fa-trash-can"></i> Delete
+          </button>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  container.innerHTML = html;
+}
+
+async function deleteBroadcastConfirm(id) {
+  const b = (adminState.broadcasts || []).find(x => x.id === id);
+  const title = b ? b.title : 'this announcement';
+  if (!confirm(`Are you sure you want to delete "${title}"? This will remove the notice from all Citizen phonebook apps in real-time.`)) {
+    return;
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/broadcasts/${id}`, {
+      method: 'DELETE',
+      headers: { 'X-Admin-PIN': adminState.pin }
+    }).then(r => r.json());
+
+    if (res.success) {
+      showAdminToast(`🗑️ Announcement removed from citizen apps!`);
+      fetchAdminData();
+    } else {
+      alert(`Delete error: ${res.error}`);
+    }
+  } catch (err) {
+    alert('Failed to delete announcement.');
   }
 }
 
@@ -1848,7 +1950,7 @@ function renderAdminCouncils() {
           <button class="btn btn-sm btn-secondary" onclick="viewCouncilMembers('${escapeHtml(v.name)}')">
             <i class="fa-solid fa-users-viewfinder"></i> View Members (${memberCount})
           </button>
-          <button class="btn-card-del" onclick="deleteCouncilConfirm('${v.id}', '${escapeHtml(v.name)}')">
+          <button class="btn-card-del" onclick="deleteCouncilConfirm('${v.id}')">
             <i class="fa-solid fa-trash-can"></i> Remove Council
           </button>
         </div>
@@ -1923,7 +2025,9 @@ async function submitNewCouncil(e) {
 }
 
 async function deleteCouncilConfirm(villageId, villageName) {
-  if (!confirm(`Are you sure you want to remove ${villageName}? This will remove the council from directory listings in real-time.`)) {
+  const target = adminState.villages.find(v => v.id === villageId);
+  const nameToDisplay = villageName || (target ? target.name : 'this Council');
+  if (!confirm(`Are you sure you want to remove ${nameToDisplay}? This will remove the council and all its contacts from directory listings in real-time.`)) {
     return;
   }
 

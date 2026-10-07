@@ -377,9 +377,19 @@ app.delete('/api/admin/villages/:id', verifyAdmin, (req, res) => {
 
     broadcastToClients('village_deleted', {
       action: 'deleted',
-      id,
+      id: deleted.id || id,
+      name: deleted.name,
+      district: deleted.district,
       village: deleted,
+      removedContactsCount: deleted.removedContactsCount || 0,
       message: `Council removed: ${deleted.name}`
+    });
+
+    broadcastToClients('full_sync_required', {
+      reason: 'village_deleted',
+      villageId: deleted.id || id,
+      villageName: deleted.name,
+      timestamp: new Date().toISOString()
     });
 
     res.json({
@@ -760,6 +770,57 @@ app.post('/api/admin/broadcast', verifyAdmin, (req, res) => {
       success: true,
       message: 'Broadcast notification pushed to phonebooks!',
       data: bcast
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Admin Delete Broadcast / Announcement -> PUSH UPDATE TO ALL PHONEBOOKS
+app.delete('/api/admin/broadcasts/:id', verifyAdmin, (req, res) => {
+  try {
+    const id = req.params.id;
+    const deleted = db.deleteBroadcast(id);
+    if (!deleted) {
+      return res.status(404).json({ success: false, error: 'Broadcast notification not found' });
+    }
+
+    broadcastToClients('broadcast_deleted', {
+      action: 'deleted',
+      id,
+      broadcast: deleted,
+      message: `Notification removed: ${deleted.title}`
+    });
+
+    res.json({
+      success: true,
+      message: 'Broadcast notification deleted in real-time.',
+      data: deleted
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.delete('/api/admin/broadcast/:id', verifyAdmin, (req, res) => {
+  try {
+    const id = req.params.id;
+    const deleted = db.deleteBroadcast(id);
+    if (!deleted) {
+      return res.status(404).json({ success: false, error: 'Broadcast notification not found' });
+    }
+
+    broadcastToClients('broadcast_deleted', {
+      action: 'deleted',
+      id,
+      broadcast: deleted,
+      message: `Notification removed: ${deleted.title}`
+    });
+
+    res.json({
+      success: true,
+      message: 'Broadcast notification deleted in real-time.',
+      data: deleted
     });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });

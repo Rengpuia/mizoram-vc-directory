@@ -236,6 +236,20 @@
             </form>
           </div>
 
+          <!-- Active Broadcasts & Notification History with Delete Option -->
+          <div class="card-section" style="margin-top: 14px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+              <div>
+                <h3 style="margin-bottom:2px;"><i class="fa-solid fa-list-check" style="color:#f59e0b;"></i> Active Notifications &amp; History</h3>
+                <p style="color:#94a3b8; font-size:0.8rem; margin:0;">Announcements sent to citizen apps. Admins can delete any notice to remove it in real-time.</p>
+              </div>
+              <span class="district-badge" id="adminBroadcastCountBadge" style="background:rgba(245,158,11,0.15); color:#f59e0b; border:1px solid rgba(245,158,11,0.3);">0 Active</span>
+            </div>
+            <div id="adminBroadcastsList" class="admin-broadcasts-list" style="display:flex; flex-direction:column; gap:10px;">
+              <!-- Populated dynamically with delete button -->
+            </div>
+          </div>
+
           <div class="card-section" style="margin-top: 14px;">
             <h3><i class="fa-solid fa-code" style="color:#0284c7;"></i> Developer &amp; App Support Information</h3>
             <p>Update developer name and support email displayed on citizen Phonebook apps.</p>

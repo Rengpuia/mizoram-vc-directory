@@ -1,7 +1,13 @@
 // Mizoram VC Phonebook - Client Application Logic (Multi-District Support)
 // Features: Multi-District switcher, Real-time SSE updates, Offline Caching, Touch Calling, WhatsApp, Error Reporting
 
-const API_BASE = window.location.origin;
+const isLocalBrowser = ['localhost', '127.0.0.1'].includes(window.location.hostname) && window.location.port !== '';
+const isWebHosting = window.location.protocol.startsWith('http') && 
+                     !['localhost', '127.0.0.1'].includes(window.location.hostname);
+
+const API_BASE = (isLocalBrowser || isWebHosting)
+  ? window.location.origin
+  : 'https://mizoram-vc-directory.onrender.com';
 
 let state = {
   currentDistrict: localStorage.getItem('kolasib_selected_district') || 'Kolasib',
@@ -10,6 +16,7 @@ let state = {
   emergency: [],
   villages: [],
   offices: [],
+  broadcasts: [],
   filteredContacts: [],
   filteredOffices: [],
   currentCategory: 'All',
@@ -46,9 +53,17 @@ function loadCachedData() {
   const cachedEmergency = localStorage.getItem(`kolasib_emergency_${distKey}`) || localStorage.getItem('kolasib_emergency');
   const cachedVillages = localStorage.getItem(`kolasib_villages_${distKey}`) || localStorage.getItem('kolasib_villages');
   const cachedOffices = localStorage.getItem(`kolasib_offices_${distKey}`) || localStorage.getItem('kolasib_offices');
+  const cachedBroadcasts = localStorage.getItem(`kolasib_broadcasts_${distKey}`) || localStorage.getItem('kolasib_broadcasts');
   const cachedBroadcast = localStorage.getItem(`kolasib_broadcast_${distKey}`) || localStorage.getItem('kolasib_broadcast');
   const cachedDistricts = localStorage.getItem('mizoram_districts');
   const cachedAppInfo = localStorage.getItem('kolasib_app_info');
+
+  if (cachedBroadcasts) {
+    try {
+      state.broadcasts = JSON.parse(cachedBroadcasts);
+      updateNotificationBadge();
+    } catch (e) {}
+  }
 
   if (cachedAppInfo) {
     try {
@@ -108,6 +123,9 @@ function saveToCache() {
   localStorage.setItem(`kolasib_emergency_${distKey}`, JSON.stringify(state.emergency));
   localStorage.setItem(`kolasib_villages_${distKey}`, JSON.stringify(state.villages));
   localStorage.setItem(`kolasib_offices_${distKey}`, JSON.stringify(state.offices));
+  if (state.broadcasts) {
+    localStorage.setItem(`kolasib_broadcasts_${distKey}`, JSON.stringify(state.broadcasts));
+  }
   if (state.districts && state.districts.length > 0) {
     localStorage.setItem('mizoram_districts', JSON.stringify(state.districts));
   }
@@ -121,9 +139,10 @@ function saveToCache() {
 // -------------------------------------------------------------
 async function fetchFreshData() {
   try {
-    updateSyncBadge(null, `Syncing ${state.currentDistrict}...`);
+    const distKey = state.currentDistrict;
+    updateSyncBadge(null, `Syncing ${distKey}...`);
 
-    const distParam = encodeURIComponent(state.currentDistrict);
+    const distParam = encodeURIComponent(distKey);
     const [districtsRes, contactsRes, emergencyRes, villagesRes, officesRes, bcastRes, appInfoRes] = await Promise.all([
       fetch(`${API_BASE}/api/districts`).then(r => r.json()).catch(() => ({ success: false })),
       fetch(`${API_BASE}/api/contacts?district=${distParam}`).then(r => r.json()),
@@ -159,8 +178,15 @@ async function fetchFreshData() {
       applyOfficeFilters();
     }
 
-    if (bcastRes.success && bcastRes.data && bcastRes.data.length > 0) {
-      showBroadcast(bcastRes.data[0]);
+    if (bcastRes.success && bcastRes.data) {
+      state.broadcasts = bcastRes.data;
+      localStorage.setItem(`kolasib_broadcasts_${distKey}`, JSON.stringify(state.broadcasts));
+      updateNotificationBadge();
+      if (state.broadcasts.length > 0) {
+        showBroadcast(state.broadcasts[0]);
+      } else {
+        dismissBroadcast();
+      }
     }
 
     if (appInfoRes && appInfoRes.success && appInfoRes.data) {
@@ -236,7 +262,7 @@ function updateCategoryChips() {
 }
 
 const DEFAULT_MIZORAM_DISTRICTS = [
-  { name: 'Kolasib', headquarter: 'Kolasib', totalVCs: 60 },
+  { name: 'Kolasib', headquarter: 'Kolasib', totalVCs: 48 },
   { name: 'Aizawl', headquarter: 'Aizawl', totalVCs: 85 },
   { name: 'Lunglei', headquarter: 'Lunglei', totalVCs: 64 },
   { name: 'Champhai', headquarter: 'Champhai', totalVCs: 48 },
@@ -383,12 +409,42 @@ function initSSEPushListener() {
         if (payload.broadcast) {
           const b = payload.broadcast;
           if (!b.district || b.district === 'All' || b.district.toLowerCase() === state.currentDistrict.toLowerCase()) {
+            state.broadcasts = state.broadcasts.filter(x => x.id !== b.id);
+            state.broadcasts.unshift(b);
+            localStorage.setItem(`kolasib_broadcasts_${state.currentDistrict}`, JSON.stringify(state.broadcasts));
             showBroadcast(b);
+            updateNotificationBadge();
+            renderNotificationHistory();
             showLiveToast(`📢 Notice: ${b.title}`);
           }
         }
       } catch (err) {
         console.error('Error handling broadcast SSE:', err);
+      }
+    });
+
+    // 4b. District Broadcast deleted by Admin
+    sse.addEventListener('broadcast_deleted', (e) => {
+      try {
+        const payload = JSON.parse(e.data);
+        const delId = payload.id;
+        state.broadcasts = state.broadcasts.filter(b => b.id !== delId);
+        localStorage.setItem(`kolasib_broadcasts_${state.currentDistrict}`, JSON.stringify(state.broadcasts));
+        updateNotificationBadge();
+        renderNotificationHistory();
+
+        // If currently displayed banner matches deleted broadcast, show next or dismiss
+        const bannerTitle = document.getElementById('broadcastTitle');
+        if (bannerTitle && payload.broadcast && bannerTitle.textContent === payload.broadcast.title) {
+          if (state.broadcasts.length > 0) {
+            showBroadcast(state.broadcasts[0]);
+          } else {
+            dismissBroadcast();
+          }
+        }
+        showLiveToast(`🗑️ Notice removed by Admin`);
+      } catch (err) {
+        console.error('Error handling broadcast_deleted SSE:', err);
       }
     });
 
@@ -524,11 +580,25 @@ function initSSEPushListener() {
     sse.addEventListener('village_deleted', (e) => {
       try {
         const payload = JSON.parse(e.data);
-        state.villages = state.villages.filter(v => v.id !== payload.id);
+        const delId = payload.id;
+        const delName = (payload.village && payload.village.name) ? payload.village.name : payload.name;
+
+        // Remove from local villages list by ID and Name
+        state.villages = state.villages.filter(v => 
+          v.id !== delId && (!delName || (v.name && v.name.toLowerCase() !== delName.toLowerCase()))
+        );
+
+        // Remove associated contacts from state.contacts
+        state.contacts = state.contacts.filter(c => 
+          c.villageId !== delId && (!delName || (c.villageName && c.villageName.toLowerCase() !== delName.toLowerCase()))
+        );
+
         saveToCache();
+        updateCategoryChips();
         renderVillages();
+        applyFilters();
         updateDistrictUI();
-        showLiveToast(`🗑️ Council removed by Admin`);
+        showLiveToast(`🗑️ Council removed: ${delName || 'Council'}`);
       } catch (err) {
         console.error('Error handling village_deleted SSE:', err);
       }
@@ -1041,6 +1111,90 @@ function showBroadcast(bcast) {
 
 function dismissBroadcast() {
   document.getElementById('broadcastBanner').style.display = 'none';
+}
+
+// -------------------------------------------------------------
+// Notification History (View at least 4 past notices)
+// -------------------------------------------------------------
+function updateNotificationBadge() {
+  const badge = document.getElementById('notificationBadgeCount');
+  if (!badge) return;
+  const count = (state.broadcasts || []).length;
+  if (count > 0) {
+    badge.textContent = count > 9 ? '9+' : count;
+    badge.style.display = 'flex';
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
+function openNotificationHistoryModal() {
+  const modal = document.getElementById('notificationHistoryModal');
+  if (!modal) return;
+  renderNotificationHistory();
+  modal.style.display = 'flex';
+}
+
+function closeNotificationHistoryModal() {
+  const modal = document.getElementById('notificationHistoryModal');
+  if (modal) modal.style.display = 'none';
+}
+
+function renderNotificationHistory() {
+  const container = document.getElementById('notificationHistoryList');
+  const subtitle = document.getElementById('notificationHistorySubtitle');
+  if (!container) return;
+
+  const list = state.broadcasts || [];
+  if (subtitle) {
+    subtitle.textContent = `${list.length} Notice${list.length !== 1 ? 's' : ''} • ${state.currentDistrict}`;
+  }
+
+  if (list.length === 0) {
+    container.innerHTML = `
+      <div style="text-align:center; padding:32px 16px; color:#94a3b8;">
+        <i class="fa-solid fa-bell-slash" style="font-size:2rem; margin-bottom:10px; color:#cbd5e1; display:block;"></i>
+        <h4 style="font-size:0.95rem; font-weight:700; color:#64748b; margin-bottom:4px;">No Notifications Yet</h4>
+        <p style="font-size:0.8rem; margin:0;">Official district announcements and alerts will appear here.</p>
+      </div>
+    `;
+    return;
+  }
+
+  // Display all available notifications (at least 4 visible when present)
+  const html = list.map(b => {
+    const isUrgent = b.priority === 'urgent';
+    const dateStr = b.createdAt ? new Date(b.createdAt).toLocaleString('en-IN', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    }) : 'Recent';
+
+    return `
+      <div class="notification-card ${isUrgent ? 'urgent' : 'normal'}">
+        <div class="notification-card-header">
+          <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+            <span class="notification-meta-tag ${isUrgent ? 'urgent' : 'normal'}">
+              <i class="fa-solid ${isUrgent ? 'fa-triangle-exclamation' : 'fa-bullhorn'}"></i>
+              ${isUrgent ? 'Urgent Alert' : 'Notice'}
+            </span>
+            <span style="font-size:0.72rem; font-weight:600; color:#64748b; background:#f1f5f9; padding:2px 6px; border-radius:4px;">
+              <i class="fa-solid fa-location-dot" style="font-size:10px;"></i> ${escapeHtml(b.district || 'All Districts')}
+            </span>
+          </div>
+          <span class="notification-time-tag">
+            <i class="fa-regular fa-clock"></i> ${escapeHtml(dateStr)}
+          </span>
+        </div>
+        <h4 class="notification-card-title">${escapeHtml(b.title)}</h4>
+        <p class="notification-card-body">${escapeHtml(b.message)}</p>
+      </div>
+    `;
+  }).join('');
+
+  container.innerHTML = html;
 }
 
 // -------------------------------------------------------------
