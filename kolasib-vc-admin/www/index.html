@@ -26,8 +26,8 @@
         <form id="loginForm" onsubmit="handleLogin(event)">
           <div class="pin-input-group">
             <label for="adminPinInput">Enter Administrator PIN</label>
-            <input type="password" id="adminPinInput" placeholder="••••" maxlength="8" autofocus required>
-            <small>Default Administration PIN: <strong>1234</strong></small>
+            <input type="password" id="adminPinInput" placeholder="Enter Admin PIN" maxlength="32" autofocus required>
+            <small style="color: var(--text-muted);"><i class="fa-solid fa-shield-halved"></i> Authorized personnel only</small>
           </div>
           <button type="submit" class="btn btn-primary btn-block" id="btnLogin">
             <i class="fa-solid fa-lock-open"></i> Unlock Admin Portal

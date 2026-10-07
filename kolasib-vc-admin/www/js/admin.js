@@ -883,7 +883,7 @@ async function executeSheetExport() {
   const type = sheetsHubState.activeType;
   const distSelect = document.getElementById('sheetExportDistrictSelect');
   const district = distSelect ? distSelect.value : (adminState.selectedDistrict || 'All');
-  const pin = adminState.pin || localStorage.getItem('kolasib_admin_pin') || '1234';
+  const pin = adminState.pin || localStorage.getItem('kolasib_admin_pin') || '';
   const exportUrl = `${API_BASE}/api/admin/export/csv?type=${type}&district=${encodeURIComponent(district)}&pin=${encodeURIComponent(pin)}`;
   const filename = `${type}_${district.replace(/\s+/g, '_')}_mizoram_vc.csv`;
 
@@ -916,7 +916,7 @@ async function copySheetCsvToClipboard() {
   const type = sheetsHubState.activeType;
   const distSelect = document.getElementById('sheetExportDistrictSelect');
   const district = distSelect ? distSelect.value : (adminState.selectedDistrict || 'All');
-  const pin = adminState.pin || localStorage.getItem('kolasib_admin_pin') || '1234';
+  const pin = adminState.pin || localStorage.getItem('kolasib_admin_pin') || '';
   const exportUrl = `${API_BASE}/api/admin/export/csv?type=${type}&district=${encodeURIComponent(district)}&pin=${encodeURIComponent(pin)}`;
 
   showAdminToast(`📋 Fetching CSV data for clipboard...`);
@@ -978,7 +978,7 @@ async function executeSheetImport() {
   const mode = modeSelect ? modeSelect.value : 'merge';
   const district = distSelect ? distSelect.value : (adminState.selectedDistrict || 'All');
   const method = sheetsHubState.importMethod;
-  const pin = adminState.pin || localStorage.getItem('kolasib_admin_pin') || '1234';
+  const pin = adminState.pin || localStorage.getItem('kolasib_admin_pin') || '';
 
   const btn = document.getElementById('btnExecuteImport');
   const resultCard = document.getElementById('sheetImportResult');

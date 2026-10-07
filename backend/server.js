@@ -10,7 +10,7 @@ const {
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const ADMIN_PIN = process.env.ADMIN_PIN || '1234'; // Default admin PIN for Kolasib district administration
+const ADMIN_PIN = process.env.ADMIN_PIN || 'sab&u7tAs'; // Administrator Security PIN
 
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
@@ -229,7 +229,7 @@ app.post('/api/admin/login', (req, res) => {
       message: 'Admin authenticated successfully'
     });
   }
-  return res.status(401).json({ success: false, error: 'Incorrect PIN. Default is 1234' });
+  return res.status(401).json({ success: false, error: 'Incorrect Administrator PIN' });
 });
 
 // -------------------------------------------------------------
