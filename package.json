@@ -1,0 +1,17 @@
+{
+  "name": "mizoram-vc-directory-system",
+  "version": "1.0.0",
+  "description": "Mizoram VC Phonebook, Admin Management Portal & Real-Time Sync Backend",
+  "main": "backend/server.js",
+  "scripts": {
+    "start": "node backend/server.js",
+    "dev": "node --watch backend/server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "cors": "^2.8.5"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

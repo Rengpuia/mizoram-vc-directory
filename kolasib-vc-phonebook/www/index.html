@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#1a5f7a">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/png" href="icon-192.png">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <title>Kolasib VC Phonebook</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Top Status Bar & App Header -->
+    <header class="app-header">
+      <div class="header-top">
+        <div class="logo-area">
+          <div class="logo-icon">
+            <i class="fa-solid fa-landmark-dome"></i>
+          </div>
+          <div class="logo-text">
+            <h1 id="appTitle">Kolasib VC Phonebook</h1>
+            <p id="appSubtitle">Village Council Directory • Mizoram</p>
+          </div>
+        </div>
+        <div class="header-actions">
+          <button class="district-badge-btn" id="districtSelectBtn" onclick="openDistrictModal()" title="Switch District">
+            <i class="fa-solid fa-location-dot"></i>
+            <span id="currentDistrictText">Kolasib</span>
+            <i class="fa-solid fa-chevron-down" style="font-size:10px; margin-left:2px;"></i>
+          </button>
+          <div class="sync-badge" id="syncBadge" title="Connection status">
+            <span class="sync-dot"></span>
+            <span class="sync-text" id="syncStatusText">Connecting...</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Live Broadcast Alert Banner (if any) -->
+      <div class="broadcast-banner" id="broadcastBanner" style="display: none;">
+        <i class="fa-solid fa-bullhorn banner-icon"></i>
+        <div class="banner-content">
+          <strong id="broadcastTitle">District Announcement</strong>
+          <p id="broadcastMsg"></p>
+        </div>
+        <button class="banner-close" onclick="dismissBroadcast()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <!-- Search Bar -->
+      <div class="search-box">
+        <i class="fa-solid fa-magnifying-glass search-icon"></i>
+        <input type="text" id="searchInput" placeholder="Search by name, village, role, phone..." autocomplete="off">
+        <button id="clearSearchBtn" class="clear-btn" style="display: none;" onclick="clearSearch()">
+          <i class="fa-solid fa-circle-xmark"></i>
+        </button>
+      </div>
+
+      <!-- Quick Category Chips -->
+      <div class="filter-scroll-container">
+        <div class="filter-chips" id="categoryChips">
+          <button class="chip active" data-cat="All">All VCs</button>
+          <button class="chip" data-cat="Kolasib Town">Kolasib Town</button>
+          <button class="chip" data-cat="Vairengte Area">Vairengte</button>
+          <button class="chip" data-cat="Bilkhawthlir Area">Bilkhawthlir</button>
+          <button class="chip" data-cat="Bairabi Area">Bairabi</button>
+          <button class="chip" data-cat="Kawnpui Area">Kawnpui</button>
+          <button class="chip" data-cat="Thingdawl Area">Thingdawl</button>
+        </div>
+      </div>
+
+      <!-- Role Filters -->
+      <div class="sub-filter-row">
+        <div class="role-selector">
+          <span class="filter-label"><i class="fa-solid fa-filter"></i> Role:</span>
+          <select id="roleFilter">
+            <option value="All">All Designations</option>
+            <option value="President">VCP (President) / Chairman</option>
+            <option value="Vice President">VCVP (Vice President)</option>
+            <option value="Secretary">VCS (Secretary)</option>
+            <option value="Treasurer">Treasurer (VCT / LCT)</option>
+            <option value="Member">VCM (Member)</option>
+            <option value="Worker">VLW (Worker)</option>
+          </select>
+        </div>
+        <div class="contact-counter" id="contactCounter">Loading contacts...</div>
+      </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      <!-- Phonebook Directory Tab -->
+      <section id="tabPhonebook" class="tab-page active">
+        <!-- Live Toast for Admin Updates -->
+        <div id="liveUpdateToast" class="live-update-toast" style="display: none;">
+          <i class="fa-solid fa-bell toast-icon"></i>
+          <span id="toastMessage">Admin pushed an update</span>
+        </div>
+
+        <div id="contactsList" class="contacts-list">
+          <!-- Contact cards dynamically rendered here -->
+        </div>
+
+        <div id="noResults" class="empty-state" style="display: none;">
+          <i class="fa-solid fa-address-book-slash"></i>
+          <h3>No contacts found</h3>
+          <p>Try searching for a different name, village or designation.</p>
+          <button class="btn btn-secondary" onclick="resetFilters()">Reset All Filters</button>
+        </div>
+      </section>
+
+      <!-- Government & District Offices Tab -->
+      <section id="tabOffices" class="tab-page">
+        <div class="emergency-header" style="background: linear-gradient(135deg, #1e3a8a, #0369a1);">
+          <div class="em-title">
+            <i class="fa-solid fa-building-flag"></i>
+            <h2>Government &amp; District Offices</h2>
+          </div>
+          <p>DC Office, Police, Line Departments &amp; Staff Directory</p>
+        </div>
+
+        <!-- Office Search Bar -->
+        <div class="search-container" style="padding: 10px 14px 6px 14px;">
+          <div class="search-bar">
+            <i class="fa-solid fa-magnifying-glass search-icon"></i>
+            <input type="text" id="officeSearchInput" placeholder="Search offices, departments or officers...">
+            <button class="clear-search-btn" id="clearOfficeSearchBtn" onclick="clearOfficeSearch()" style="display: none;">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Office Department Category Pills -->
+        <div class="category-pills" id="officeCategoryPills" style="padding: 0 14px 10px 14px;">
+          <button class="pill active" data-ocat="All">All Offices</button>
+          <button class="pill" data-ocat="Administration">Administration</button>
+          <button class="pill" data-ocat="Police & Security">Police</button>
+          <button class="pill" data-ocat="Health">Health</button>
+          <button class="pill" data-ocat="Development & Blocks">RD &amp; Blocks</button>
+          <button class="pill" data-ocat="Technical & Works">PWD &amp; PHE</button>
+          <button class="pill" data-ocat="Utilities & Power">Power</button>
+          <button class="pill" data-ocat="Agriculture & Rural">Agriculture</button>
+        </div>
+
+        <div id="officesList" class="offices-list" style="padding: 0 14px 20px 14px; display: flex; flex-direction: column; gap: 14px;">
+          <!-- Office cards with staff lists dynamically rendered -->
+        </div>
+
+        <div id="noOfficeResults" class="empty-state" style="display: none;">
+          <i class="fa-solid fa-building-circle-xmark"></i>
+          <h3>No offices found</h3>
+          <p>Try searching for a different office or officer name.</p>
+        </div>
+      </section>
+
+      <!-- Emergency Directory Tab -->
+      <section id="tabEmergency" class="tab-page">
+        <div class="emergency-header">
+          <div class="em-title">
+            <i class="fa-solid fa-shield-heart"></i>
+            <h2>Kolasib District Emergency Services</h2>
+          </div>
+          <p>Toll-free helplines, administration, police &amp; hospital contacts</p>
+        </div>
+
+        <div id="emergencyList" class="emergency-list">
+          <!-- Emergency cards dynamically rendered -->
+        </div>
+      </section>
+
+      <!-- Village Councils Directory Tab -->
+      <section id="tabVillages" class="tab-page">
+        <div class="villages-header">
+          <h2><i class="fa-solid fa-city"></i> Kolasib Village Councils (60)</h2>
+          <p>Tap any Village Council to view all executive members</p>
+        </div>
+        <div id="villagesList" class="villages-grid">
+          <!-- Villages dynamically rendered -->
+        </div>
+      </section>
+
+      <!-- About & Info Tab -->
+      <section id="tabAbout" class="tab-page">
+        <div class="about-card">
+          <div class="about-icon"><i class="fa-solid fa-landmark-flag"></i></div>
+          <h3 id="aboutAppTitle">VC Phonebook</h3>
+          <p class="app-ver">Version 2.4.0 (2026 Edition)</p>
+          <p class="about-desc">
+            Official digital telephone directory of Village Councils &amp; Local Councils across Mizoram.
+            Enables direct communication between residents, district officials, and village administration.
+          </p>
+          
+          <div class="info-box">
+            <h4><i class="fa-solid fa-bolt"></i> Live Sync Technology</h4>
+            <p>Updates made by District Administrators are pushed in real-time to your device. Works seamlessly offline with cached contacts.</p>
+          </div>
+
+          <div class="info-box">
+            <h4><i class="fa-solid fa-triangle-exclamation"></i> Found Incorrect Information?</h4>
+            <p>Tap <strong>"Report Error"</strong> on any contact card to submit phone number or office updates directly to administrators.</p>
+          </div>
+
+          <div class="dev-info-card" id="developerInfoCard">
+            <div class="dev-info-header">
+              <i class="fa-solid fa-code"></i>
+              <h4>Application Developer &amp; Support</h4>
+            </div>
+            <div class="dev-info-body">
+              <div class="dev-item">
+                <span class="dev-label">Developer / Team:</span>
+                <strong id="devNameDisplay" class="dev-value">Mizoram IT &amp; e-Governance Team</strong>
+              </div>
+              <div class="dev-item">
+                <span class="dev-label">Contact / Email:</span>
+                <a id="devEmailLink" href="mailto:support.vc@mizoram.gov.in" class="dev-email-link">
+                  <i class="fa-solid fa-envelope"></i> <span id="devEmailDisplay">support.vc@mizoram.gov.in</span>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Bottom Navigation Bar -->
+    <nav class="bottom-nav">
+      <button class="nav-item active" onclick="switchTab('tabPhonebook', this)">
+        <i class="fa-solid fa-address-book"></i>
+        <span>VCs</span>
+      </button>
+      <button class="nav-item" onclick="switchTab('tabOffices', this)">
+        <i class="fa-solid fa-building"></i>
+        <span>Offices</span>
+      </button>
+      <button class="nav-item" onclick="switchTab('tabVillages', this)">
+        <i class="fa-solid fa-city"></i>
+        <span>Councils</span>
+      </button>
+      <button class="nav-item em-nav" onclick="switchTab('tabEmergency', this)">
+        <i class="fa-solid fa-phone-volume"></i>
+        <span>Emergency</span>
+      </button>
+      <button class="nav-item" onclick="switchTab('tabAbout', this)">
+        <i class="fa-solid fa-circle-info"></i>
+        <span>About</span>
+      </button>
+    </nav>
+
+    <!-- Report Incorrect Contact Modal -->
+    <div id="reportModal" class="modal-backdrop" style="display: none;">
+      <div class="modal-box">
+        <div class="modal-header">
+          <div class="modal-title-group">
+            <i class="fa-solid fa-pen-to-square"></i>
+            <h3>Report Incorrect Information</h3>
+          </div>
+          <button class="modal-close" onclick="closeReportModal()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <form id="reportForm" onsubmit="submitCorrectionReport(event)">
+          <div class="modal-body">
+            <div class="report-target-summary">
+              <strong id="repTargetName">Lalremruata Ralte</strong>
+              <span id="repTargetDesignation">President (VCP)</span>
+              <span id="repTargetVillage">Kolasib Diakkawn</span>
+            </div>
+
+            <input type="hidden" id="repContactId">
+            <input type="hidden" id="repContactName">
+            <input type="hidden" id="repVillageName">
+            <input type="hidden" id="repDesignation">
+
+            <div class="form-group">
+              <label for="repIssueType">Issue Type</label>
+              <select id="repIssueType" required>
+                <option value="incorrect_phone">Incorrect / Inactive Phone Number</option>
+                <option value="name_spelling">Name Spelling Error</option>
+                <option value="term_expired">No longer in office / Term ended</option>
+                <option value="wrong_village">Wrong Village / Designation</option>
+                <option value="other">Other Correction</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="repCorrectPhone">Suggested Correct Phone Number</label>
+              <input type="tel" id="repCorrectPhone" placeholder="e.g. 9862123456" pattern="[0-9]{10}">
+              <small class="form-help">Enter the active 10-digit mobile number</small>
+            </div>
+
+            <div class="form-group">
+              <label for="repDetails">Correction Details / Notes</label>
+              <textarea id="repDetails" rows="2" placeholder="Explain what is incorrect or provide updated information..."></textarea>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="repUserName">Your Name (Optional)</label>
+                <input type="text" id="repUserName" placeholder="Resident / Citizen">
+              </div>
+              <div class="form-group">
+                <label for="repUserPhone">Your Phone (Optional)</label>
+                <input type="tel" id="repUserPhone" placeholder="For verification">
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeReportModal()">Cancel</button>
+            <button type="submit" class="btn btn-primary" id="btnSubmitReport">
+              <i class="fa-solid fa-paper-plane"></i> Submit to Admin
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- District Selector Modal -->
+    <div id="districtModal" class="modal-backdrop" style="display: none;">
+      <div class="modal-box modal-district-box">
+        <div class="modal-header">
+          <div class="modal-title-group">
+            <i class="fa-solid fa-map-location-dot"></i>
+            <h3>Select District</h3>
+          </div>
+          <button class="modal-close" onclick="closeDistrictModal()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="modal-body" style="padding: 16px;">
+          <p style="font-size: 13px; color: #64748b; margin-bottom: 14px;">Select your district in Mizoram to view Village Councils, Government Offices, and Emergency Services:</p>
+          <div class="district-grid" id="districtListContainer">
+            <!-- Dynamically populated with all Mizoram districts -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>

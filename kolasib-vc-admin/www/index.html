@@ -1,0 +1,1311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#1e293b">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/png" href="icon-192.png">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <title>Kolasib VC Admin App</title>
+  <link rel="stylesheet" href="css/admin.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+  <div class="admin-app-container">
+
+    <!-- Screen 1: Admin Login Screen (PIN) -->
+    <div id="loginScreen" class="screen active">
+      <div class="login-wrapper">
+        <div class="login-shield">
+          <i class="fa-solid fa-shield-halved"></i>
+        </div>
+        <h2>Kolasib VC Admin</h2>
+        <p class="login-subtitle">District Administration & VC Management Portal</p>
+
+        <form id="loginForm" onsubmit="handleLogin(event)">
+          <div class="pin-input-group">
+            <label for="adminPinInput">Enter Administrator PIN</label>
+            <input type="password" id="adminPinInput" placeholder="••••" maxlength="8" autofocus required>
+            <small>Default Administration PIN: <strong>1234</strong></small>
+          </div>
+          <button type="submit" class="btn btn-primary btn-block" id="btnLogin">
+            <i class="fa-solid fa-lock-open"></i> Unlock Admin Portal
+          </button>
+        </form>
+        <div id="loginError" class="login-error" style="display: none;"></div>
+      </div>
+    </div>
+
+    <!-- Screen 2: Admin Dashboard & Management -->
+    <div id="adminMainScreen" class="screen">
+      <!-- Admin Header -->
+      <header class="admin-header">
+        <div class="header-top">
+          <div class="admin-brand">
+            <div class="admin-badge-icon"><i class="fa-solid fa-shield-cat"></i></div>
+            <div>
+              <h1 id="adminBrandTitle">Mizoram VC Admin</h1>
+              <p><span class="pulse-green"></span> Multi-District Control Active</p>
+            </div>
+          </div>
+          <div class="header-actions">
+            <button class="btn-sheets-hub" onclick="openSheetsModal('contacts')" title="Google Sheets Import &amp; Export Hub">
+              <i class="fa-solid fa-file-excel"></i> <span>Google Sheets</span>
+            </button>
+            <button class="btn-logout" onclick="handleLogout()" title="Lock Portal">
+              <i class="fa-solid fa-arrow-right-from-bracket"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- District Controller Bar -->
+        <div class="district-control-bar">
+          <div class="d-control-label">
+            <i class="fa-solid fa-map-location-dot"></i>
+            <span>District:</span>
+          </div>
+          <select id="adminDistrictSelect" class="admin-district-dropdown" onchange="changeAdminDistrict(this.value)">
+            <option value="All">All Districts (State-wide)</option>
+            <option value="Kolasib">Kolasib</option>
+            <option value="Aizawl">Aizawl</option>
+            <option value="Lunglei">Lunglei</option>
+            <option value="Champhai">Champhai</option>
+            <option value="Mamit">Mamit</option>
+            <option value="Serchhip">Serchhip</option>
+            <option value="Saitual">Saitual</option>
+            <option value="Khawzawl">Khawzawl</option>
+            <option value="Hnahthial">Hnahthial</option>
+            <option value="Lawngtlai">Lawngtlai</option>
+            <option value="Siaha">Siaha</option>
+          </select>
+          <span class="active-district-tag" id="activeDistrictBadge">All Districts</span>
+        </div>
+
+        <!-- Quick Tabs -->
+        <div class="admin-nav-tabs">
+          <button class="tab-btn active" onclick="switchAdminTab('tabContacts', this)">
+            <i class="fa-solid fa-users-gear"></i> Directory
+          </button>
+          <button class="tab-btn" onclick="switchAdminTab('tabCouncilsAdmin', this)">
+            <i class="fa-solid fa-city"></i> Councils
+          </button>
+          <button class="tab-btn" onclick="switchAdminTab('tabEmergencyAdmin', this)">
+            <i class="fa-solid fa-shield-heart"></i> Emergency
+          </button>
+          <button class="tab-btn" onclick="switchAdminTab('tabOfficesAdmin', this)">
+            <i class="fa-solid fa-building-columns"></i> Offices
+          </button>
+          <button class="tab-btn" onclick="switchAdminTab('tabReports', this)" id="navReportsBtn">
+            <i class="fa-solid fa-triangle-exclamation"></i> Reports
+            <span class="report-bubble" id="pendingBubble" style="display:none;">0</span>
+          </button>
+          <button class="tab-btn" onclick="switchAdminTab('tabBroadcast', this)">
+            <i class="fa-solid fa-bullhorn"></i> Broadcast &amp; App
+          </button>
+          <button class="tab-btn" onclick="switchAdminTab('tabAudit', this)">
+            <i class="fa-solid fa-clock-rotate-left"></i> Audit
+          </button>
+        </div>
+      </header>
+
+      <!-- Main Admin Body -->
+      <main class="admin-body">
+
+        <!-- Tab 1: Contacts Management -->
+        <section id="tabContacts" class="admin-tab-content active">
+          <!-- Stats Summary Bar -->
+          <div class="stats-grid">
+            <div class="stat-card">
+              <span class="stat-val" id="statContacts">57</span>
+              <span class="stat-lbl">Total Contacts</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-val" id="statVillages">22</span>
+              <span class="stat-lbl">Village Councils</span>
+            </div>
+            <div class="stat-card alert" onclick="switchAdminTab('tabReports', document.getElementById('navReportsBtn'))">
+              <span class="stat-val" id="statPendingReports">0</span>
+              <span class="stat-lbl">Reports to Review</span>
+            </div>
+          </div>
+
+          <!-- Action Bar -->
+          <div class="action-bar">
+            <div class="search-input-wrap">
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <input type="text" id="adminSearchInput" placeholder="Search contacts to edit...">
+            </div>
+            <div style="display:flex; gap:8px;">
+              <button class="btn btn-sheet-quick" onclick="openSheetsModal('contacts')" title="Export or Import with Google Sheets">
+                <i class="fa-solid fa-file-excel"></i> Sheets
+              </button>
+              <button class="btn btn-add" onclick="openAddModal()">
+                <i class="fa-solid fa-user-plus"></i> Add
+              </button>
+            </div>
+          </div>
+
+          <!-- Contact Category Filters -->
+          <div class="admin-filter-pills" id="adminCategoryPills">
+            <button class="pill active" data-cat="All">All</button>
+            <button class="pill" data-cat="Kolasib Town">Town</button>
+            <button class="pill" data-cat="Vairengte Area">Vairengte</button>
+            <button class="pill" data-cat="Bilkhawthlir Area">Bilkhawthlir</button>
+            <button class="pill" data-cat="Bairabi Area">Bairabi</button>
+            <button class="pill" data-cat="Kawnpui Area">Kawnpui</button>
+          </div>
+
+          <!-- Admin Contact List -->
+          <div id="adminContactsList" class="admin-contacts-list">
+            <!-- Rendered contacts -->
+          </div>
+        </section>
+
+        <!-- Tab 2: User-Submitted Error Reports -->
+        <section id="tabReports" class="admin-tab-content">
+          <div class="reports-header-box">
+            <div>
+              <h3><i class="fa-solid fa-triangle-exclamation" style="color:#f59e0b;"></i> Correction Reports</h3>
+              <p>Submitted by citizens via the Kolasib VC Phonebook app.</p>
+            </div>
+            <button class="btn btn-sm btn-secondary" onclick="fetchAdminData()">
+              <i class="fa-solid fa-rotate"></i> Refresh
+            </button>
+          </div>
+
+          <div class="report-filter-bar">
+            <button class="sub-tab active" onclick="filterReports('pending', this)">Pending</button>
+            <button class="sub-tab" onclick="filterReports('applied', this)">Applied</button>
+            <button class="sub-tab" onclick="filterReports('rejected', this)">Rejected</button>
+            <button class="sub-tab" onclick="filterReports('all', this)">All</button>
+          </div>
+
+          <div id="adminReportsList" class="admin-reports-list">
+            <!-- Dynamic reports list -->
+          </div>
+        </section>
+
+        <!-- Tab 3: Broadcast Announcement -->
+        <section id="tabBroadcast" class="admin-tab-content">
+          <div class="card-section">
+            <h3><i class="fa-solid fa-bullhorn"></i> Push Announcement to Phonebook</h3>
+            <p>Broadcast notices, office hour changes, or election updates directly to all citizen apps.</p>
+
+            <form id="broadcastForm" onsubmit="submitBroadcast(event)">
+              <div class="form-group">
+                <label>Announcement Title</label>
+                <input type="text" id="bcastTitle" placeholder="e.g. Village Council Election Update 2026" required>
+              </div>
+
+              <div class="form-group">
+                <label>Broadcast Message</label>
+                <textarea id="bcastMessage" rows="3" placeholder="Enter message text that will display on all Kolasib VC Phonebooks..." required></textarea>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Priority</label>
+                  <select id="bcastPriority">
+                    <option value="normal">Normal Notice</option>
+                    <option value="urgent">Urgent / District Alert</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Target District</label>
+                  <select id="bcastDistrict">
+                    <option value="All">All Districts (State-wide)</option>
+                    <option value="Kolasib">Kolasib</option>
+                    <option value="Aizawl">Aizawl</option>
+                    <option value="Lunglei">Lunglei</option>
+                    <option value="Champhai">Champhai</option>
+                    <option value="Mamit">Mamit</option>
+                    <option value="Serchhip">Serchhip</option>
+                    <option value="Saitual">Saitual</option>
+                    <option value="Khawzawl">Khawzawl</option>
+                    <option value="Hnahthial">Hnahthial</option>
+                    <option value="Lawngtlai">Lawngtlai</option>
+                    <option value="Siaha">Siaha</option>
+                  </select>
+                </div>
+              </div>
+
+              <button type="submit" class="btn btn-primary btn-block">
+                <i class="fa-solid fa-paper-plane"></i> Push Broadcast Alert Now
+              </button>
+            </form>
+          </div>
+
+          <div class="card-section" style="margin-top: 14px;">
+            <h3><i class="fa-solid fa-code" style="color:#0284c7;"></i> Developer &amp; App Support Information</h3>
+            <p>Update developer name and support email displayed on citizen Phonebook apps.</p>
+
+            <form id="appInfoForm" onsubmit="saveDeveloperInfo(event)">
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Developer / Team Name</label>
+                  <input type="text" id="devNameInput" placeholder="e.g. Mizoram IT &amp; e-Governance Team" required>
+                </div>
+                <div class="form-group">
+                  <label>Support / Developer Email</label>
+                  <input type="email" id="devEmailInput" placeholder="e.g. support.vc@mizoram.gov.in" required>
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Helpline / Support Phone (Optional)</label>
+                <input type="tel" id="devPhoneInput" placeholder="e.g. 9436123456">
+              </div>
+              <button type="submit" class="btn btn-primary" id="btnSaveAppInfo" style="background:#0284c7;">
+                <i class="fa-solid fa-cloud-arrow-up"></i> Save &amp; Push Developer Info
+              </button>
+            </form>
+          </div>
+
+          <div class="card-section" style="margin-top: 14px; border-left: 4px solid #10b981;">
+            <h3><i class="fa-solid fa-file-excel" style="color:#10b981;"></i> Google Sheets Integration &amp; Bulk Sync</h3>
+            <p>Export live directory data to Google Sheets or import external spreadsheets directly into Phonebook.</p>
+            <div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:10px;">
+              <button class="btn btn-secondary" onclick="openSheetsModal('contacts')" style="background:#065f46; color:#fff; border:none;">
+                <i class="fa-solid fa-users"></i> VC Contacts Sheet
+              </button>
+              <button class="btn btn-secondary" onclick="openSheetsModal('emergency')" style="background:#991b1b; color:#fff; border:none;">
+                <i class="fa-solid fa-shield-heart"></i> Emergency Sheet
+              </button>
+              <button class="btn btn-secondary" onclick="openSheetsModal('offices')" style="background:#0369a1; color:#fff; border:none;">
+                <i class="fa-solid fa-building-columns"></i> Offices &amp; Staff Sheet
+              </button>
+            </div>
+          </div>
+
+          <div class="card-section" style="margin-top: 14px;">
+            <h3><i class="fa-solid fa-database"></i> Backup & Database</h3>
+            <p>Download full Mizoram VC directory JSON backup or restore.</p>
+            <div style="display:flex; gap:8px; margin-top:8px;">
+              <button class="btn btn-secondary" onclick="exportBackup()"><i class="fa-solid fa-download"></i> Export JSON</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Tab 4: Audit Logs & Push Stream History -->
+        <section id="tabAudit" class="admin-tab-content">
+          <div class="audit-header">
+            <h3><i class="fa-solid fa-shield-halved"></i> Real-Time Audit Log</h3>
+            <p>Track all contact changes and instant push events.</p>
+          </div>
+          <div id="auditLogList" class="audit-list">
+            <!-- Dynamically populated -->
+          </div>
+        </section>
+
+        <!-- Tab 5: Emergency Contacts Management -->
+        <section id="tabEmergencyAdmin" class="admin-tab-content">
+          <div class="emergency-admin-header-box">
+            <div>
+              <h3><i class="fa-solid fa-shield-heart" style="color:#ef4444;"></i> Emergency Contacts</h3>
+              <p>Helplines, Police, Hospitals, Fire, and District Control Rooms</p>
+            </div>
+            <div style="display:flex; gap:8px;">
+              <button class="btn btn-sheet-quick" onclick="openSheetsModal('emergency')" title="Google Sheets Import / Export">
+                <i class="fa-solid fa-file-excel"></i> Sheets
+              </button>
+              <button class="btn btn-add" onclick="openAddEmergencyModal()" style="background:#ef4444;">
+                <i class="fa-solid fa-plus"></i> Add Service
+              </button>
+            </div>
+          </div>
+
+          <div class="action-bar" style="margin-top:10px;">
+            <div class="search-input-wrap">
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <input type="text" id="adminEmergencySearch" placeholder="Search emergency contacts...">
+            </div>
+          </div>
+
+          <div id="adminEmergencyList" class="admin-emergency-list">
+            <!-- Dynamically populated emergency contacts -->
+          </div>
+        </section>
+
+        <!-- Tab 6: Government Offices & Staff Management -->
+        <section id="tabOfficesAdmin" class="admin-tab-content">
+          <div class="emergency-admin-header-box">
+            <div>
+              <h3><i class="fa-solid fa-building-columns" style="color:#0284c7;"></i> Government Offices &amp; Staff</h3>
+              <p>DC Office, Police, Line Departments &amp; Office Staff Directory</p>
+            </div>
+            <div style="display:flex; gap:8px;">
+              <button class="btn btn-sheet-quick" onclick="openSheetsModal('offices')" title="Google Sheets Import / Export">
+                <i class="fa-solid fa-file-excel"></i> Sheets
+              </button>
+              <button class="btn btn-add" onclick="openAddOfficeModal()" style="background:#0284c7;">
+                <i class="fa-solid fa-plus"></i> Add Office
+              </button>
+            </div>
+          </div>
+
+          <div class="action-bar" style="margin-top:10px;">
+            <div class="search-input-wrap">
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <input type="text" id="adminOfficeSearch" placeholder="Search offices, departments or staff...">
+            </div>
+          </div>
+
+          <div id="adminOfficesList" class="admin-offices-list">
+            <!-- Dynamically populated offices with staff lists -->
+          </div>
+        </section>
+
+        <!-- Tab 7: Village & Local Councils Management -->
+        <section id="tabCouncilsAdmin" class="admin-tab-content">
+          <div class="emergency-admin-header-box">
+            <div>
+              <h3><i class="fa-solid fa-city" style="color:#10b981;"></i> Village &amp; Local Councils</h3>
+              <p>Add or remove Village Councils (VC) and Local Councils (LC) across districts</p>
+            </div>
+            <button class="btn btn-add" onclick="openAddCouncilModal()" style="background:#10b981;">
+              <i class="fa-solid fa-plus"></i> Add Council
+            </button>
+          </div>
+
+          <div class="action-bar" style="margin-top:10px;">
+            <div class="search-input-wrap">
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <input type="text" id="adminCouncilSearch" placeholder="Search village or local council...">
+            </div>
+          </div>
+
+          <div class="category-pills" id="adminCouncilTypePills" style="margin-top:8px; margin-bottom:12px;">
+            <button class="pill active" data-ctype="All">All Councils</button>
+            <button class="pill" data-ctype="Village Council">Village Councils (VC)</button>
+            <button class="pill" data-ctype="Local Council">Local Councils (LC)</button>
+          </div>
+
+          <div id="adminCouncilsList" class="admin-contacts-list">
+            <!-- Dynamically populated councils -->
+          </div>
+        </section>
+
+      </main>
+    </div>
+
+    <!-- Modal: Edit / Correct Contact -->
+    <div id="editContactModal" class="admin-modal-backdrop" style="display: none;">
+      <div class="admin-modal">
+        <div class="admin-modal-header">
+          <h3 id="modalEditTitle"><i class="fa-solid fa-pen-to-square"></i> Edit Contact & Push Update</h3>
+          <button class="modal-close" onclick="closeEditModal()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <form id="editContactForm" onsubmit="saveContactChanges(event)">
+          <div class="admin-modal-body">
+            <input type="hidden" id="editContactId">
+
+            <div class="form-group">
+              <label>Official Name</label>
+              <input type="text" id="editName" required placeholder="Full Name">
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>Primary Phone Number</label>
+                <input type="tel" id="editPhone" required placeholder="10-digit number" pattern="[0-9]{10}">
+              </div>
+              <div class="form-group">
+                <label>Alternate Phone</label>
+                <input type="tel" id="editAltPhone" placeholder="Optional">
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>Designation / Role</label>
+                <select id="editDesignation" required>
+                  <option value="President (VCP)">President (VCP)</option>
+                  <option value="Vice President (VCVP)">Vice President (VCVP)</option>
+                  <option value="Secretary (VCS)">Secretary (VCS)</option>
+                  <option value="Treasurer (VCT)">Treasurer (VCT)</option>
+                  <option value="Chairman (Local Council)">Chairman (Local Council)</option>
+                  <option value="Secretary (Local Council)">Secretary (Local Council)</option>
+                  <option value="Treasurer (Local Council)">Treasurer (Local Council)</option>
+                  <option value="Member (VCM)">Member (VCM)</option>
+                  <option value="Member (Local Council)">Member (Local Council)</option>
+                  <option value="Village Level Worker (VLW)">Village Level Worker (VLW)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Official Term</label>
+                <input type="text" id="editTerm" placeholder="2025-2030" value="2025-2030">
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>District</label>
+                <select id="editDistrict" required>
+                  <option value="Kolasib">Kolasib</option>
+                  <option value="Aizawl">Aizawl</option>
+                  <option value="Lunglei">Lunglei</option>
+                  <option value="Champhai">Champhai</option>
+                  <option value="Mamit">Mamit</option>
+                  <option value="Serchhip">Serchhip</option>
+                  <option value="Saitual">Saitual</option>
+                  <option value="Khawzawl">Khawzawl</option>
+                  <option value="Hnahthial">Hnahthial</option>
+                  <option value="Lawngtlai">Lawngtlai</option>
+                  <option value="Siaha">Siaha</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Village Council / Locality</label>
+                <input type="text" id="editVillageName" required placeholder="e.g. Kolasib Diakkawn">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Area Category</label>
+              <select id="editCategory">
+                <option value="Town Area">Town Area</option>
+                <option value="Kolasib Town">Kolasib Town</option>
+                <option value="Vairengte Area">Vairengte Area</option>
+                <option value="Bilkhawthlir Area">Bilkhawthlir Area</option>
+                <option value="Bairabi Area">Bairabi Area</option>
+                <option value="Kawnpui Area">Kawnpui Area</option>
+                <option value="Thingdawl Area">Thingdawl Area</option>
+                <option value="Aizawl City">Aizawl City</option>
+                <option value="Lunglei Town">Lunglei Town</option>
+                <option value="Champhai Town">Champhai Town</option>
+                <option value="Rural Area">Rural Area</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>Office Notes / Location Info</label>
+              <textarea id="editNotes" rows="2" placeholder="e.g. Office hours, Community Hall location"></textarea>
+            </div>
+
+            <div class="push-notice-box">
+              <i class="fa-solid fa-bolt" style="color:#0284c7;"></i>
+              <span>Saving will <strong>instantly push</strong> this updated information to all active VC Phonebook user apps.</span>
+            </div>
+          </div>
+
+          <div class="admin-modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeEditModal()">Cancel</button>
+            <button type="submit" class="btn btn-primary" id="btnSavePush">
+              <i class="fa-solid fa-cloud-arrow-up"></i> Save & Push Update
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal: Add New Contact -->
+    <div id="addContactModal" class="admin-modal-backdrop" style="display: none;">
+      <div class="admin-modal">
+        <div class="admin-modal-header">
+          <h3><i class="fa-solid fa-user-plus"></i> Add New VC Contact</h3>
+          <button class="modal-close" onclick="closeAddModal()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <form id="addContactForm" onsubmit="submitNewContact(event)">
+          <div class="admin-modal-body">
+            <div class="form-group">
+              <label>Official Name</label>
+              <input type="text" id="addName" required placeholder="e.g. Lalthanmawia Ralte">
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>Primary Phone</label>
+                <input type="tel" id="addPhone" required placeholder="10-digit number" pattern="[0-9]{10}">
+              </div>
+              <div class="form-group">
+                <label>Alternate Phone</label>
+                <input type="tel" id="addAltPhone" placeholder="Optional">
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>Designation</label>
+                <select id="addDesignation" required>
+                  <option value="President (VCP)">President (VCP)</option>
+                  <option value="Vice President (VCVP)">Vice President (VCVP)</option>
+                  <option value="Secretary (VCS)">Secretary (VCS)</option>
+                  <option value="Treasurer (VCT)">Treasurer (VCT)</option>
+                  <option value="Chairman (Local Council)">Chairman (Local Council)</option>
+                  <option value="Secretary (Local Council)">Secretary (Local Council)</option>
+                  <option value="Treasurer (Local Council)">Treasurer (Local Council)</option>
+                  <option value="Member (VCM)">Member (VCM)</option>
+                  <option value="Member (Local Council)">Member (Local Council)</option>
+                  <option value="Village Level Worker (VLW)">Village Level Worker (VLW)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Official Term</label>
+                <input type="text" id="addTerm" value="2025-2030">
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>District</label>
+                <select id="addDistrict" required>
+                  <option value="Kolasib">Kolasib</option>
+                  <option value="Aizawl">Aizawl</option>
+                  <option value="Lunglei">Lunglei</option>
+                  <option value="Champhai">Champhai</option>
+                  <option value="Mamit">Mamit</option>
+                  <option value="Serchhip">Serchhip</option>
+                  <option value="Saitual">Saitual</option>
+                  <option value="Khawzawl">Khawzawl</option>
+                  <option value="Hnahthial">Hnahthial</option>
+                  <option value="Lawngtlai">Lawngtlai</option>
+                  <option value="Siaha">Siaha</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Village Council / Locality Name</label>
+                <input type="text" id="addVillageName" required placeholder="e.g. Kolasib Salem Veng">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Area Category</label>
+              <select id="addCategory">
+                <option value="Town Area">Town Area</option>
+                <option value="Kolasib Town">Kolasib Town</option>
+                <option value="Vairengte Area">Vairengte Area</option>
+                <option value="Bilkhawthlir Area">Bilkhawthlir Area</option>
+                <option value="Bairabi Area">Bairabi Area</option>
+                <option value="Kawnpui Area">Kawnpui Area</option>
+                <option value="Thingdawl Area">Thingdawl Area</option>
+                <option value="Aizawl City">Aizawl City</option>
+                <option value="Lunglei Town">Lunglei Town</option>
+                <option value="Champhai Town">Champhai Town</option>
+                <option value="Rural Area">Rural Area</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>Notes</label>
+              <textarea id="addNotes" rows="2" placeholder="Office location or additional details"></textarea>
+            </div>
+          </div>
+          <div class="admin-modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeAddModal()">Cancel</button>
+            <button type="submit" class="btn btn-primary">
+              <i class="fa-solid fa-cloud-arrow-up"></i> Add & Push to Phonebooks
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal: Edit Emergency Contact -->
+    <div id="editEmergencyModal" class="admin-modal-backdrop" style="display: none;">
+      <div class="admin-modal">
+        <div class="admin-modal-header">
+          <h3><i class="fa-solid fa-pen-to-square"></i> Edit Emergency Service &amp; Push</h3>
+          <button class="modal-close" onclick="closeEditEmergencyModal()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <form id="editEmergencyForm" onsubmit="saveEmergencyChanges(event)">
+          <div class="admin-modal-body">
+            <input type="hidden" id="editEmId">
+
+            <div class="form-group">
+              <label>Service / Department Name</label>
+              <input type="text" id="editEmService" required placeholder="e.g. District Hospital Kolasib">
+            </div>
+
+            <div class="form-group">
+              <label>Officer / Designation In-Charge</label>
+              <input type="text" id="editEmOfficer" required placeholder="e.g. Medical Superintendent / Casualty">
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>Primary Emergency Phone</label>
+                <input type="tel" id="editEmPhone" required placeholder="e.g. 03837220038 or 108">
+              </div>
+              <div class="form-group">
+                <label>Alternate Phone / Helpline</label>
+                <input type="tel" id="editEmAltPhone" placeholder="Optional">
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>Service Category</label>
+                <select id="editEmCategory">
+                  <option value="Administration">Administration</option>
+                  <option value="Police & Security">Police & Security</option>
+                  <option value="Health & Medical">Health & Medical</option>
+                  <option value="Fire & Rescue">Fire & Rescue</option>
+                  <option value="Disaster & Relief">Disaster & Relief</option>
+                  <option value="Utilities">Utilities (Power / Water)</option>
+                  <option value="Helpline">Helpline</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Priority</label>
+                <select id="editEmPriority">
+                  <option value="1">Priority 1 (Emergency Top)</option>
+                  <option value="2">Priority 2 (Standard)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>District</label>
+                <select id="editEmDistrict" required>
+                  <option value="Kolasib">Kolasib</option>
+                  <option value="Aizawl">Aizawl</option>
+                  <option value="Lunglei">Lunglei</option>
+                  <option value="Champhai">Champhai</option>
+                  <option value="Mamit">Mamit</option>
+                  <option value="Serchhip">Serchhip</option>
+                  <option value="Saitual">Saitual</option>
+                  <option value="Khawzawl">Khawzawl</option>
+                  <option value="Hnahthial">Hnahthial</option>
+                  <option value="Lawngtlai">Lawngtlai</option>
+                  <option value="Siaha">Siaha</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Office Address / Location</label>
+                <input type="text" id="editEmAddress" placeholder="e.g. Hospital Veng, Kolasib">
+              </div>
+            </div>
+
+            <div class="push-notice-box">
+              <i class="fa-solid fa-bolt" style="color:#0284c7;"></i>
+              <span>Saving will <strong>instantly push</strong> this updated emergency contact to all active Phonebook apps in real-time.</span>
+            </div>
+          </div>
+
+          <div class="admin-modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeEditEmergencyModal()">Cancel</button>
+            <button type="submit" class="btn btn-primary" id="btnSaveEmPush">
+              <i class="fa-solid fa-cloud-arrow-up"></i> Save &amp; Push Update
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal: Add Emergency Contact -->
+    <div id="addEmergencyModal" class="admin-modal-backdrop" style="display: none;">
+      <div class="admin-modal">
+        <div class="admin-modal-header">
+          <h3><i class="fa-solid fa-plus-circle"></i> Add Emergency Contact</h3>
+          <button class="modal-close" onclick="closeAddEmergencyModal()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <form id="addEmergencyForm" onsubmit="submitNewEmergency(event)">
+          <div class="admin-modal-body">
+            <div class="form-group">
+              <label>Service / Department Name</label>
+              <input type="text" id="addEmService" required placeholder="e.g. Kolasib Traffic Police Control">
+            </div>
+
+            <div class="form-group">
+              <label>Officer / Designation In-Charge</label>
+              <input type="text" id="addEmOfficer" required placeholder="e.g. Traffic OC / Control Room">
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>Primary Phone</label>
+                <input type="tel" id="addEmPhone" required placeholder="Phone number or Toll-Free">
+              </div>
+              <div class="form-group">
+                <label>Alternate Phone</label>
+                <input type="tel" id="addEmAltPhone" placeholder="Optional">
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>Service Category</label>
+                <select id="addEmCategory">
+                  <option value="Administration">Administration</option>
+                  <option value="Police & Security">Police & Security</option>
+                  <option value="Health & Medical">Health & Medical</option>
+                  <option value="Fire & Rescue">Fire & Rescue</option>
+                  <option value="Disaster & Relief">Disaster & Relief</option>
+                  <option value="Utilities">Utilities</option>
+                  <option value="Helpline">Helpline</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Priority</label>
+                <select id="addEmPriority">
+                  <option value="1">Priority 1 (Top)</option>
+                  <option value="2" selected>Priority 2 (Standard)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>District</label>
+                <select id="addEmDistrict" required>
+                  <option value="Kolasib">Kolasib</option>
+                  <option value="Aizawl">Aizawl</option>
+                  <option value="Lunglei">Lunglei</option>
+                  <option value="Champhai">Champhai</option>
+                  <option value="Mamit">Mamit</option>
+                  <option value="Serchhip">Serchhip</option>
+                  <option value="Saitual">Saitual</option>
+                  <option value="Khawzawl">Khawzawl</option>
+                  <option value="Hnahthial">Hnahthial</option>
+                  <option value="Lawngtlai">Lawngtlai</option>
+                  <option value="Siaha">Siaha</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Office Address / Location</label>
+                <input type="text" id="addEmAddress" placeholder="e.g. Project Veng, Kolasib">
+              </div>
+            </div>
+          </div>
+
+          <div class="admin-modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeAddEmergencyModal()">Cancel</button>
+            <button type="submit" class="btn btn-primary" id="btnAddEmPush">
+              <i class="fa-solid fa-cloud-arrow-up"></i> Add &amp; Push to Phonebooks
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal: Add Government Office -->
+    <div id="addOfficeModal" class="admin-modal-backdrop" style="display: none;">
+      <div class="admin-modal">
+        <div class="admin-modal-header">
+          <h3><i class="fa-solid fa-building-columns"></i> Add Government Office</h3>
+          <button class="modal-close" onclick="closeAddOfficeModal()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <form id="addOfficeForm" onsubmit="submitNewOffice(event)">
+          <div class="admin-modal-body">
+            <div class="form-group">
+              <label>Office / Department Name</label>
+              <input type="text" id="addOffName" required placeholder="e.g. Block Development Office (BDO), Bilkhawthlir">
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>Department</label>
+                <input type="text" id="addOffDept" placeholder="e.g. Rural Development">
+              </div>
+              <div class="form-group">
+                <label>Category</label>
+                <select id="addOffCat">
+                  <option value="Administration">Administration</option>
+                  <option value="Police & Security">Police & Security</option>
+                  <option value="Health">Health</option>
+                  <option value="Development & Blocks">Development & Blocks</option>
+                  <option value="Technical & Works">Technical & Works</option>
+                  <option value="Utilities & Power">Utilities & Power</option>
+                  <option value="Agriculture & Rural">Agriculture & Rural</option>
+                  <option value="Education & Social">Education & Social</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>Office Main Phone</label>
+                <input type="tel" id="addOffPhone" placeholder="Landline or Mobile">
+              </div>
+              <div class="form-group">
+                <label>Official Email</label>
+                <input type="email" id="addOffEmail" placeholder="e.g. office@mizoram.gov.in">
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>District</label>
+                <select id="addOffDistrict" required>
+                  <option value="Kolasib">Kolasib</option>
+                  <option value="Aizawl">Aizawl</option>
+                  <option value="Lunglei">Lunglei</option>
+                  <option value="Champhai">Champhai</option>
+                  <option value="Mamit">Mamit</option>
+                  <option value="Serchhip">Serchhip</option>
+                  <option value="Saitual">Saitual</option>
+                  <option value="Khawzawl">Khawzawl</option>
+                  <option value="Hnahthial">Hnahthial</option>
+                  <option value="Lawngtlai">Lawngtlai</option>
+                  <option value="Siaha">Siaha</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Office Address / Location</label>
+                <input type="text" id="addOffAddr" placeholder="e.g. DC Office Complex, Kolasib">
+              </div>
+            </div>
+          </div>
+
+          <div class="admin-modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeAddOfficeModal()">Cancel</button>
+            <button type="submit" class="btn btn-primary" id="btnAddOffPush">
+              <i class="fa-solid fa-cloud-arrow-up"></i> Add Office &amp; Push
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal: Edit Government Office -->
+    <div id="editOfficeModal" class="admin-modal-backdrop" style="display: none;">
+      <div class="admin-modal">
+        <div class="admin-modal-header">
+          <h3><i class="fa-solid fa-pen-to-square"></i> Edit Office &amp; Push</h3>
+          <button class="modal-close" onclick="closeEditOfficeModal()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <form id="editOfficeForm" onsubmit="saveOfficeChanges(event)">
+          <div class="admin-modal-body">
+            <input type="hidden" id="editOffId">
+
+            <div class="form-group">
+              <label>Office / Department Name</label>
+              <input type="text" id="editOffName" required>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>Department</label>
+                <input type="text" id="editOffDept">
+              </div>
+              <div class="form-group">
+                <label>Category</label>
+                <select id="editOffCat">
+                  <option value="Administration">Administration</option>
+                  <option value="Police & Security">Police & Security</option>
+                  <option value="Health">Health</option>
+                  <option value="Development & Blocks">Development & Blocks</option>
+                  <option value="Technical & Works">Technical & Works</option>
+                  <option value="Utilities & Power">Utilities & Power</option>
+                  <option value="Agriculture & Rural">Agriculture & Rural</option>
+                  <option value="Education & Social">Education & Social</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>Office Main Phone</label>
+                <input type="tel" id="editOffPhone">
+              </div>
+              <div class="form-group">
+                <label>Official Email</label>
+                <input type="email" id="editOffEmail">
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>District</label>
+                <select id="editOffDistrict" required>
+                  <option value="Kolasib">Kolasib</option>
+                  <option value="Aizawl">Aizawl</option>
+                  <option value="Lunglei">Lunglei</option>
+                  <option value="Champhai">Champhai</option>
+                  <option value="Mamit">Mamit</option>
+                  <option value="Serchhip">Serchhip</option>
+                  <option value="Saitual">Saitual</option>
+                  <option value="Khawzawl">Khawzawl</option>
+                  <option value="Hnahthial">Hnahthial</option>
+                  <option value="Lawngtlai">Lawngtlai</option>
+                  <option value="Siaha">Siaha</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Office Address / Location</label>
+                <input type="text" id="editOffAddr">
+              </div>
+            </div>
+          </div>
+
+          <div class="admin-modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeEditOfficeModal()">Cancel</button>
+            <button type="submit" class="btn btn-primary" id="btnSaveOffPush">
+              <i class="fa-solid fa-cloud-arrow-up"></i> Save &amp; Push Update
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal: Add Staff Member to Office -->
+    <div id="addStaffModal" class="admin-modal-backdrop" style="display: none;">
+      <div class="admin-modal">
+        <div class="admin-modal-header">
+          <h3><i class="fa-solid fa-user-plus"></i> Add Office Staff Member</h3>
+          <button class="modal-close" onclick="closeAddStaffModal()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <form id="addStaffForm" onsubmit="submitNewStaff(event)">
+          <div class="admin-modal-body">
+            <input type="hidden" id="addStaffOfficeId">
+            <div style="background:rgba(2,132,199,0.12); padding:8px 12px; border-radius:6px; font-size:0.8rem; color:#38bdf8;">
+              <strong>Office:</strong> <span id="addStaffOfficeTitle">Office</span>
+            </div>
+
+            <div class="form-group">
+              <label>Staff Official Name</label>
+              <input type="text" id="addStaffName" required placeholder="Full Name (e.g. Pu Robert C. Lalhmangaiha)">
+            </div>
+
+            <div class="form-group">
+              <label>Designation / Role</label>
+              <input type="text" id="addStaffDesignation" required placeholder="e.g. Deputy Commissioner / SDO / Assistant">
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>Primary Phone</label>
+                <input type="tel" id="addStaffPhone" required placeholder="10-digit mobile or landline">
+              </div>
+              <div class="form-group">
+                <label>Alternate Phone</label>
+                <input type="tel" id="addStaffAltPhone" placeholder="Optional">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Staff Email</label>
+              <input type="email" id="addStaffEmail" placeholder="Optional official email">
+            </div>
+          </div>
+
+          <div class="admin-modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeAddStaffModal()">Cancel</button>
+            <button type="submit" class="btn btn-primary" id="btnAddStaffPush">
+              <i class="fa-solid fa-cloud-arrow-up"></i> Add Staff &amp; Push
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal: Edit Staff Member in Office -->
+    <div id="editStaffModal" class="admin-modal-backdrop" style="display: none;">
+      <div class="admin-modal">
+        <div class="admin-modal-header">
+          <h3><i class="fa-solid fa-user-pen"></i> Edit Staff Contact &amp; Push</h3>
+          <button class="modal-close" onclick="closeEditStaffModal()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <form id="editStaffForm" onsubmit="saveStaffChanges(event)">
+          <div class="admin-modal-body">
+            <input type="hidden" id="editStaffOfficeId">
+            <input type="hidden" id="editStaffId">
+
+            <div class="form-group">
+              <label>Staff Official Name</label>
+              <input type="text" id="editStaffName" required>
+            </div>
+
+            <div class="form-group">
+              <label>Designation / Role</label>
+              <input type="text" id="editStaffDesignation" required>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>Primary Phone</label>
+                <input type="tel" id="editStaffPhone" required>
+              </div>
+              <div class="form-group">
+                <label>Alternate Phone</label>
+                <input type="tel" id="editStaffAltPhone">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Staff Email</label>
+              <input type="email" id="editStaffEmail">
+            </div>
+          </div>
+
+          <div class="admin-modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeEditStaffModal()">Cancel</button>
+            <button type="submit" class="btn btn-primary" id="btnSaveStaffPush">
+              <i class="fa-solid fa-cloud-arrow-up"></i> Save &amp; Push Update
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal: Add Village / Local Council -->
+    <div id="addCouncilModal" class="admin-modal-backdrop" style="display: none;">
+      <div class="admin-modal">
+        <div class="admin-modal-header">
+          <h3><i class="fa-solid fa-plus-circle" style="color:#10b981;"></i> Add Village / Local Council</h3>
+          <button class="modal-close" onclick="closeAddCouncilModal()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <form id="addCouncilForm" onsubmit="submitNewCouncil(event)">
+          <div class="admin-modal-body">
+            <div class="form-group">
+              <label>Council / Locality Name</label>
+              <input type="text" id="addCouncilName" required placeholder="e.g. Kolasib Salem Veng or Aizawl Khatla">
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label>Council Type</label>
+                <select id="addCouncilType" required>
+                  <option value="Village Council">Village Council (VC)</option>
+                  <option value="Local Council">Local Council (LC - Urban)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>District</label>
+                <select id="addCouncilDistrict" required>
+                  <option value="Kolasib">Kolasib</option>
+                  <option value="Aizawl">Aizawl</option>
+                  <option value="Lunglei">Lunglei</option>
+                  <option value="Champhai">Champhai</option>
+                  <option value="Mamit">Mamit</option>
+                  <option value="Serchhip">Serchhip</option>
+                  <option value="Saitual">Saitual</option>
+                  <option value="Khawzawl">Khawzawl</option>
+                  <option value="Hnahthial">Hnahthial</option>
+                  <option value="Lawngtlai">Lawngtlai</option>
+                  <option value="Siaha">Siaha</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Area Category</label>
+              <select id="addCouncilCategory">
+                <option value="Town Area">Town Area</option>
+                <option value="Kolasib Town">Kolasib Town</option>
+                <option value="Vairengte Area">Vairengte Area</option>
+                <option value="Bilkhawthlir Area">Bilkhawthlir Area</option>
+                <option value="Bairabi Area">Bairabi Area</option>
+                <option value="Kawnpui Area">Kawnpui Area</option>
+                <option value="Thingdawl Area">Thingdawl Area</option>
+                <option value="Aizawl City">Aizawl City</option>
+                <option value="Lunglei Town">Lunglei Town</option>
+                <option value="Champhai Town">Champhai Town</option>
+                <option value="Rural Area">Rural Area</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>Office Address / Community Hall Location</label>
+              <input type="text" id="addCouncilAddress" placeholder="e.g. Community Hall, Salem Veng">
+            </div>
+
+            <div class="push-notice-box">
+              <i class="fa-solid fa-bolt" style="color:#10b981;"></i>
+              <span>Adding this council will <strong>instantly sync</strong> to all citizen Phonebook apps in real-time.</span>
+            </div>
+          </div>
+
+          <div class="admin-modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeAddCouncilModal()">Cancel</button>
+            <button type="submit" class="btn btn-primary" id="btnAddCouncilPush" style="background:#10b981;">
+              <i class="fa-solid fa-cloud-arrow-up"></i> Add Council &amp; Push
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal: Google Sheets Import & Export Hub -->
+    <div id="sheetsHubModal" class="admin-modal-backdrop" style="display: none; z-index: 9999;">
+      <div class="admin-modal sheets-hub-modal">
+        <div class="admin-modal-header" style="background: linear-gradient(135deg, #065f46 0%, #047857 100%);">
+          <div>
+            <h3><i class="fa-solid fa-file-excel"></i> Google Sheets Data Hub</h3>
+            <p style="font-size: 0.78rem; opacity: 0.9; margin: 2px 0 0 0; color: #d1fae5;">
+              Export &amp; Import live directory data with Google Sheets
+            </p>
+          </div>
+          <button class="modal-close" onclick="closeSheetsModal()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+
+        <div class="sheets-sheet-selector">
+          <button class="sheet-type-btn active" id="sheetTypeContactsBtn" onclick="selectSheetType('contacts')">
+            <i class="fa-solid fa-users"></i>
+            <span>VC &amp; LC Contacts</span>
+          </button>
+          <button class="sheet-type-btn" id="sheetTypeEmergencyBtn" onclick="selectSheetType('emergency')">
+            <i class="fa-solid fa-shield-heart"></i>
+            <span>Emergency Services</span>
+          </button>
+          <button class="sheet-type-btn" id="sheetTypeOfficesBtn" onclick="selectSheetType('offices')">
+            <i class="fa-solid fa-building-columns"></i>
+            <span>Offices &amp; Staff</span>
+          </button>
+        </div>
+
+        <div class="sheets-action-tabs">
+          <button class="action-tab-btn active" id="sheetActionExportBtn" onclick="selectSheetAction('export')">
+            <i class="fa-solid fa-cloud-arrow-down"></i> Export to Google Sheet
+          </button>
+          <button class="action-tab-btn" id="sheetActionImportBtn" onclick="selectSheetAction('import')">
+            <i class="fa-solid fa-cloud-arrow-up"></i> Import from Google Sheet
+          </button>
+        </div>
+
+        <div class="admin-modal-body" style="padding: 16px;">
+          <!-- Active Sheet Info Banner -->
+          <div class="sheet-info-banner" id="sheetInfoBanner">
+            <div class="banner-icon"><i class="fa-solid fa-table"></i></div>
+            <div class="banner-text">
+              <strong id="activeSheetTitle">VC &amp; Local Council Directory</strong>
+              <span id="activeSheetDesc">All elected members, designations (VCP, VCS, VCT), council names &amp; districts.</span>
+            </div>
+          </div>
+
+          <!-- SUB-PANEL 1: EXPORT -->
+          <div id="sheetsExportPanel" class="sheets-sub-panel active">
+            <div class="sheets-option-group">
+              <label><i class="fa-solid fa-filter"></i> Select District to Export</label>
+              <select id="sheetExportDistrictSelect" class="form-control">
+                <option value="All">All Districts (State-wide)</option>
+                <option value="Kolasib">Kolasib</option>
+                <option value="Aizawl">Aizawl</option>
+                <option value="Lunglei">Lunglei</option>
+                <option value="Champhai">Champhai</option>
+                <option value="Mamit">Mamit</option>
+                <option value="Serchhip">Serchhip</option>
+                <option value="Saitual">Saitual</option>
+                <option value="Khawzawl">Khawzawl</option>
+                <option value="Hnahthial">Hnahthial</option>
+                <option value="Lawngtlai">Lawngtlai</option>
+                <option value="Siaha">Siaha</option>
+              </select>
+            </div>
+
+            <div class="sheets-export-actions">
+              <button class="btn btn-primary btn-block sheets-btn-download" onclick="executeSheetExport()">
+                <i class="fa-solid fa-file-arrow-down"></i> Download Google Sheet CSV
+              </button>
+              <div style="display: flex; gap: 8px; margin-top: 8px;">
+                <button class="btn btn-secondary" onclick="copySheetCsvToClipboard()" style="flex: 1;" title="Copy CSV to clipboard to paste directly into Google Sheets">
+                  <i class="fa-solid fa-copy"></i> Copy CSV
+                </button>
+                <button class="btn btn-secondary" onclick="downloadSheetTemplate()" style="flex: 1;">
+                  <i class="fa-solid fa-file-circle-plus"></i> Template CSV
+                </button>
+              </div>
+            </div>
+
+            <div class="sheets-guide-box">
+              <h4><i class="fa-brands fa-google-drive"></i> How to open in Google Sheets:</h4>
+              <ol>
+                <li>Click <strong>Download Google Sheet CSV</strong> above (or <strong>Copy CSV</strong>).</li>
+                <li>Go to <a href="https://sheets.google.com" target="_blank" rel="noopener">Google Sheets</a> and create a new blank sheet.</li>
+                <li>Click <strong>File</strong> &gt; <strong>Import</strong> &gt; <strong>Upload</strong> and drop the downloaded file, or paste directly into cell A1.</li>
+                <li>Choose <em>"Replace spreadsheet"</em> and click <strong>Import data</strong>.</li>
+              </ol>
+            </div>
+          </div>
+
+          <!-- SUB-PANEL 2: IMPORT -->
+          <div id="sheetsImportPanel" class="sheets-sub-panel" style="display: none;">
+            <div class="sheets-input-tabs">
+              <label class="radio-label">
+                <input type="radio" name="sheetImportMethod" value="url" checked onchange="toggleImportMethod('url')">
+                <span><i class="fa-solid fa-link"></i> Sheet Link</span>
+              </label>
+              <label class="radio-label">
+                <input type="radio" name="sheetImportMethod" value="file" onchange="toggleImportMethod('file')">
+                <span><i class="fa-solid fa-file-arrow-up"></i> Upload CSV</span>
+              </label>
+              <label class="radio-label">
+                <input type="radio" name="sheetImportMethod" value="text" onchange="toggleImportMethod('text')">
+                <span><i class="fa-solid fa-paste"></i> Paste Text</span>
+              </label>
+            </div>
+
+            <!-- Method A: Google Sheet Link -->
+            <div id="methodUrlGroup" class="form-group" style="margin-top: 12px;">
+              <label><i class="fa-brands fa-google-drive"></i> Google Sheet Shared Link</label>
+              <input type="url" id="sheetImportUrlInput" placeholder="https://docs.google.com/spreadsheets/d/..." class="form-control">
+              <small class="form-help">
+                <i class="fa-solid fa-circle-info"></i> Set link sharing to <strong>"Anyone with the link can view"</strong> in Google Sheets.
+              </small>
+            </div>
+
+            <!-- Method B: CSV File Upload -->
+            <div id="methodFileGroup" class="form-group" style="margin-top: 12px; display: none;">
+              <label><i class="fa-solid fa-file-csv"></i> Choose CSV File</label>
+              <input type="file" id="sheetImportFileInput" accept=".csv,text/csv" class="form-control file-input">
+              <small class="form-help">Exported from Google Sheets via: <strong>File &gt; Download &gt; Comma Separated Values (.csv)</strong></small>
+            </div>
+
+            <!-- Method C: Direct Paste CSV / TSV Text -->
+            <div id="methodTextGroup" class="form-group" style="margin-top: 12px; display: none;">
+              <label><i class="fa-solid fa-paste"></i> Paste Rows (CSV or Copied from Google Sheets)</label>
+              <textarea id="sheetImportTextInput" rows="5" class="form-control" style="font-family: monospace; font-size: 0.78rem;" placeholder="Paste rows from Google Sheets or CSV here..."></textarea>
+              <small class="form-help">You can copy cells directly from Google Sheets / Excel and paste them here.</small>
+            </div>
+
+            <div class="form-row" style="margin-top: 12px;">
+              <div class="form-group">
+                <label>Import Mode</label>
+                <select id="sheetImportModeSelect" class="form-control">
+                  <option value="merge">Merge &amp; Update (Recommended)</option>
+                  <option value="replace">Replace District Records</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Target District</label>
+                <select id="sheetImportDistrictSelect" class="form-control">
+                  <option value="All">All / Detect from Sheet</option>
+                  <option value="Kolasib">Kolasib</option>
+                  <option value="Aizawl">Aizawl</option>
+                  <option value="Lunglei">Lunglei</option>
+                  <option value="Champhai">Champhai</option>
+                  <option value="Mamit">Mamit</option>
+                  <option value="Serchhip">Serchhip</option>
+                  <option value="Saitual">Saitual</option>
+                  <option value="Khawzawl">Khawzawl</option>
+                  <option value="Hnahthial">Hnahthial</option>
+                  <option value="Lawngtlai">Lawngtlai</option>
+                  <option value="Siaha">Siaha</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="push-notice-box" style="margin-top: 12px;">
+              <i class="fa-solid fa-bolt" style="color:#059669;"></i>
+              <span>Imported data will <strong>instantly push</strong> to all live citizen phonebooks via Server-Sent Events.</span>
+            </div>
+
+            <button class="btn btn-primary btn-block" id="btnExecuteImport" onclick="executeSheetImport()" style="margin-top: 14px; background: #059669;">
+              <i class="fa-solid fa-cloud-arrow-up"></i> Start Import &amp; Push Updates
+            </button>
+
+            <!-- Import Results Status -->
+            <div id="sheetImportResult" class="sheet-result-card" style="display: none;">
+              <!-- Dynamic result -->
+            </div>
+          </div>
+        </div>
+
+        <div class="admin-modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeSheetsModal()">Close</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Live Toast Alert -->
+    <div id="adminToast" class="admin-toast" style="display: none;">
+      <i class="fa-solid fa-circle-check"></i>
+      <span id="adminToastMsg">Success</span>
+    </div>
+
+  </div>
+
+  <script src="js/admin.js"></script>
+</body>
+</html>

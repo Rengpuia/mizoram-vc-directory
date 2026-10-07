@@ -1,0 +1,23 @@
+{
+  "name": "Kolasib VC Phonebook",
+  "short_name": "Kolasib VC",
+  "start_url": "/phonebook/",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#125b7f",
+  "description": "Kolasib District Village Council Phonebook and Emergency Directory",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

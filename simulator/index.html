@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kolasib VC Apps — Dual Device Live Simulator</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    :root {
+      --bg: #0b1120;
+      --card-bg: #1e293b;
+      --border: #334155;
+      --primary: #38bdf8;
+      --accent: #10b981;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+
+    body {
+      background: radial-gradient(circle at 50% 20%, #1e293b, #0b1120);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Top Control Bar */
+    .top-bar {
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .brand-title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-icon {
+      width: 42px;
+      height: 42px;
+      background: linear-gradient(135deg, #0284c7, #2563eb);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      box-shadow: 0 4px 12px rgba(2, 132, 199, 0.4);
+    }
+
+    .brand-title h1 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+    }
+
+    .brand-title p {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .live-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      color: #34d399;
+      padding: 6px 14px;
+      border-radius: 9999px;
+      font-size: 0.82rem;
+      font-weight: 600;
+    }
+
+    .pulse {
+      width: 8px;
+      height: 8px;
+      background-color: #34d399;
+      border-radius: 50%;
+      box-shadow: 0 0 10px #34d399;
+      animation: pulse 1.8s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.8); }
+    }
+
+    .btn-test {
+      background: #0284c7;
+      color: #ffffff;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.15s;
+    }
+
+    .btn-test:hover {
+      background: #0369a1;
+    }
+
+    /* Main Workspace */
+    .simulator-workspace {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 36px;
+      padding: 30px 20px 40px 20px;
+      overflow-x: auto;
+    }
+
+    .device-column {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .device-meta-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 412px;
+      padding: 0 6px;
+    }
+
+    .device-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.95rem;
+      font-weight: 700;
+    }
+
+    .device-title.user { color: #38bdf8; }
+    .device-title.admin { color: #818cf8; }
+
+    .device-links {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn-icon-link {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      text-decoration: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .btn-icon-link:hover {
+      color: #ffffff;
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    /* Modern Android Phone Mockup Frame */
+    .android-frame {
+      width: 412px;
+      height: 820px;
+      background: #000000;
+      border-radius: 44px;
+      box-shadow:
+        0 0 0 10px #1e293b,
+        0 0 0 12px #334155,
+        0 25px 60px rgba(0, 0, 0, 0.65);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Screen camera punch hole & speaker */
+    .phone-speaker {
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 60px;
+      height: 4px;
+      background: #334155;
+      border-radius: 4px;
+      z-index: 50;
+    }
+
+    .camera-punch {
+      position: absolute;
+      top: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 12px;
+      height: 12px;
+      background: #090d16;
+      border-radius: 50%;
+      z-index: 50;
+      border: 1.5px solid #1e293b;
+    }
+
+    /* Screen iframe container */
+    .screen-iframe-wrap {
+      flex: 1;
+      width: 100%;
+      height: 100%;
+      border-radius: 36px;
+      overflow: hidden;
+      background: #ffffff;
+    }
+
+    .screen-iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
+    /* Interactive Instruction Banner */
+    .instruction-bar {
+      background: rgba(15, 23, 42, 0.95);
+      border-top: 1px solid var(--border);
+      padding: 12px 24px;
+      display: flex;
+      justify-content: center;
+      gap: 32px;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .inst-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .inst-num {
+      width: 22px;
+      height: 22px;
+      background: var(--border);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #ffffff;
+    }
+
+    /* Quick Guide Modal */
+    .guide-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(4px);
+      z-index: 200;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .guide-box {
+      background: #1e293b;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      width: 90%;
+      max-width: 580px;
+      padding: 24px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+    }
+
+    .guide-box h2 {
+      font-size: 1.25rem;
+      margin-bottom: 12px;
+      color: #ffffff;
+    }
+
+    .guide-box ol {
+      padding-left: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      font-size: 0.9rem;
+      color: #cbd5e1;
+      margin-bottom: 20px;
+    }
+
+    .guide-box code {
+      background: #0f172a;
+      padding: 2px 6px;
+      border-radius: 4px;
+      color: #38bdf8;
+    }
+
+    .guide-close {
+      background: #0284c7;
+      color: #ffffff;
+      border: none;
+      padding: 8px 20px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Navigation & Live Controls -->
+  <header class="top-bar">
+    <div class="brand-title">
+      <div class="brand-icon">
+        <i class="fa-solid fa-arrows-split-up-and-left"></i>
+      </div>
+      <div>
+        <h1>Mizoram VC Apps — Dual Device Live Simulator</h1>
+        <p>Real-Time Multi-District Sync: Phonebook App &amp; Multi-District Admin Portal</p>
+      </div>
+    </div>
+
+    <div class="top-actions">
+      <div class="live-badge">
+        <div class="pulse"></div>
+        <span>Live Push Server Active</span>
+      </div>
+
+      <a href="/downloads/kolasib-vc-phonebook.apk" download class="btn-test" style="background:#059669; text-decoration:none;">
+        <i class="fa-solid fa-download"></i> Phonebook APK (4.9 MB)
+      </a>
+
+      <a href="/downloads/kolasib-vc-admin.apk" download class="btn-test" style="background:#4f46e5; text-decoration:none;">
+        <i class="fa-solid fa-download"></i> Admin APK (4.9 MB)
+      </a>
+
+      <button class="btn-test" onclick="openTestModal()">
+        <i class="fa-solid fa-play"></i> Quick Test
+      </button>
+
+      <button class="btn-test" style="background:#334155;" onclick="reloadFrames()">
+        <i class="fa-solid fa-rotate"></i> Reload
+      </button>
+    </div>
+  </header>
+
+  <!-- Simulator Workspace with Dual Phone Mockups -->
+  <main class="simulator-workspace">
+
+    <!-- Column 1: Citizen Phonebook App -->
+    <div class="device-column">
+      <div class="device-meta-header">
+        <div class="device-title user">
+          <i class="fa-solid fa-mobile-screen"></i>
+          <span>Mizoram VC Phonebook (Citizen App)</span>
+        </div>
+        <div class="device-links">
+          <a href="/downloads/kolasib-vc-phonebook.apk" download class="btn-icon-link" style="color:#34d399;"><i class="fa-solid fa-download"></i> Download APK</a>
+          <button class="btn-icon-link" onclick="reloadFrame('userFrame')"><i class="fa-solid fa-rotate-right"></i></button>
+          <a href="/phonebook/" target="_blank" class="btn-icon-link"><i class="fa-solid fa-arrow-up-right-from-square"></i> Fullscreen</a>
+        </div>
+      </div>
+
+      <div class="android-frame">
+        <div class="phone-speaker"></div>
+        <div class="camera-punch"></div>
+        <div class="screen-iframe-wrap">
+          <iframe id="userFrame" class="screen-iframe" src="/phonebook/"></iframe>
+        </div>
+      </div>
+    </div>
+
+    <!-- Center Sync Arrow -->
+    <div style="display:flex; flex-direction:column; align-items:center; gap:8px; color:#64748b;">
+      <i class="fa-solid fa-left-right" style="font-size:1.8rem; color:#38bdf8;"></i>
+      <span style="font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:#94a3b8;">Instant SSE Push</span>
+    </div>
+
+    <!-- Column 2: District Admin App -->
+    <div class="device-column">
+      <div class="device-meta-header">
+        <div class="device-title admin">
+          <i class="fa-solid fa-shield-halved"></i>
+          <span>Mizoram VC Admin (State &amp; Multi-District)</span>
+        </div>
+        <div class="device-links">
+          <a href="/downloads/kolasib-vc-admin.apk" download class="btn-icon-link" style="color:#818cf8;"><i class="fa-solid fa-download"></i> Download APK</a>
+          <button class="btn-icon-link" onclick="reloadFrame('adminFrame')"><i class="fa-solid fa-rotate-right"></i></button>
+          <a href="/admin/" target="_blank" class="btn-icon-link"><i class="fa-solid fa-arrow-up-right-from-square"></i> Fullscreen</a>
+        </div>
+      </div>
+
+      <div class="android-frame">
+        <div class="phone-speaker"></div>
+        <div class="camera-punch"></div>
+        <div class="screen-iframe-wrap">
+          <iframe id="adminFrame" class="screen-iframe" src="/admin/"></iframe>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Interactive Steps Footer -->
+  <footer class="instruction-bar">
+    <div class="inst-item">
+      <div class="inst-num">1</div>
+      <span>Admin App login PIN is <strong>1234</strong></span>
+    </div>
+    <div class="inst-item">
+      <div class="inst-num">2</div>
+      <span>Switch District from Admin dropdown (Controls all 11 Mizoram Districts)</span>
+    </div>
+    <div class="inst-item">
+      <div class="inst-num">3</div>
+      <span>Switch District in Phonebook header or test Live Push updates</span>
+    </div>
+    <div class="inst-item">
+      <div class="inst-num">4</div>
+      <span>Push broadcasts or edit contacts targeting specific districts</span>
+    </div>
+  </footer>
+
+  <!-- Modal: Test Scenarios -->
+  <div id="testModal" class="guide-modal">
+    <div class="guide-box">
+      <h2><i class="fa-solid fa-wand-magic-sparkles" style="color:#38bdf8;"></i> Multi-District Test Scenarios &amp; Live Verification</h2>
+      <ol>
+        <li>
+          <strong>Test Multi-District Switching in Citizen App:</strong><br>
+          In the Phonebook on the left, click the <em>District badge button</em> (top right of the header, e.g. "Kolasib"). A bottom sheet opens with all 11 Mizoram districts (Aizawl, Lunglei, Champhai, Kolasib, etc.). Select <strong>"Aizawl"</strong> or <strong>"Champhai"</strong>. The app instantly loads that district's Village Councils, Category chips, Emergency services, and Government Offices!
+        </li>
+        <li>
+          <strong>Test Multi-District Admin Portal Control:</strong><br>
+          In the Admin app on the right (PIN <code>1234</code>), use the <strong>"District" dropdown</strong> in the top control bar. Switch between <em>All Districts</em>, <em>Kolasib</em>, <em>Aizawl</em>, <em>Champhai</em>, etc. Notice that directory counts, contact lists, emergency helplines, offices, and citizen error reports immediately filter to that district.
+        </li>
+        <li>
+          <strong>Test Adding &amp; Pushing District-Specific Records:</strong><br>
+          In the Admin app, click <em>"+ Add Contact"</em> or <em>"+ Add Office"</em>. Select a district (e.g. Aizawl or Kolasib). Submit the form. Notice that if the Phonebook app on the left is viewing that district, the update appears instantaneously via SSE!
+        </li>
+        <li>
+          <strong>Test District-Targeted Announcements:</strong><br>
+          In the Admin app, go to <strong>Broadcast &amp; App</strong> tab. Select "Target District: Kolasib" or "All Districts (State-wide)". Submit an alert. Only phonebooks matching the target district (or state-wide) receive the banner notification!
+        </li>
+        <li>
+          <strong>Test Adding &amp; Removing Village / Local Councils:</strong><br>
+          In the Admin app, switch to the <strong>"Councils"</strong> tab. Click <em>"+ Add Council"</em>, choose type (e.g. "Local Council (LC)" or "Village Council (VC)"), district and name. Click Add. In the Phonebook app on the left, tap the <strong>"Councils"</strong> tab to see the council immediately appear! Now in Admin, click <em>"Remove Council"</em> to delete it in real-time.
+        </li>
+        <li>
+          <strong>Test Updating Developer Name &amp; Email:</strong><br>
+          In the Admin app, go to <strong>"Broadcast &amp; App"</strong> tab and find the <strong>Developer &amp; App Support Details</strong> section. Change the Developer Name and Email (e.g. Pu Lalhmangaiha / support@mizoram.gov.in) and click <em>"Save &amp; Push Developer Info"</em>. In the Phonebook app on the left, tap the <strong>"About"</strong> tab: the Developer Name and clickable Email are updated live!
+        </li>
+        <li>
+          <strong>Test Google Sheets Export &amp; Import:</strong><br>
+          In the Admin app on the right, click the green <strong>"Google Sheets"</strong> button in the top header (or click <em>"Sheets"</em> on Directory, Emergency, or Offices).
+          <ul>
+            <li><strong>Export:</strong> Click <em>"Download Google Sheet CSV"</em> or <em>"Copy CSV"</em> to get data formatted for Google Sheets.</li>
+            <li><strong>Import:</strong> Switch to <em>"Import from Google Sheet"</em>, choose <em>"Paste Text"</em> or <em>"Sheet Link"</em>, and click <em>"Start Import &amp; Push Updates"</em>. Watch the Phonebook app on the left update immediately!</li>
+          </ul>
+        </li>
+      </ol>
+      <button class="guide-close" onclick="closeTestModal()">Close &amp; Continue</button>
+    </div>
+  </div>
+
+  <script>
+    function reloadFrames() {
+      document.getElementById('userFrame').src = '/phonebook/';
+      document.getElementById('adminFrame').src = '/admin/';
+    }
+
+    function reloadFrame(frameId) {
+      const frame = document.getElementById(frameId);
+      frame.src = frame.src;
+    }
+
+    function openTestModal() {
+      document.getElementById('testModal').style.display = 'flex';
+    }
+
+    function closeTestModal() {
+      document.getElementById('testModal').style.display = 'none';
+    }
+  </script>
+</body>
+</html>
