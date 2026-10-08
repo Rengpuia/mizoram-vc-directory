@@ -53,7 +53,7 @@
             <a href="/download/" target="_blank" class="btn-sheets-hub" style="background:rgba(2,132,199,0.15); border-color:#0284c7; color:#38bdf8; text-decoration:none;" title="Citizen App Download Page">
               <i class="fa-brands fa-android"></i> <span>Citizen App</span>
             </a>
-            <button class="btn-sheets-hub" onclick="openStorageModal()" style="background:rgba(16,185,129,0.12); border-color:#10b981; color:#34d399;" title="Cloud Persistence, Auto-Backup &amp; Anti-Sleep">
+            <button type="button" id="btnCloudBackup" class="btn-sheets-hub" onclick="openStorageModal()" style="background:rgba(16,185,129,0.12); border-color:#10b981; color:#34d399;" title="Cloud Persistence, Auto-Backup &amp; Anti-Sleep">
               <i class="fa-solid fa-cloud-arrow-up"></i> <span>Cloud Backup</span>
             </button>
             <button class="btn-sheets-hub" onclick="openSheetsModal('contacts')" title="Google Sheets Import &amp; Export Hub">
@@ -1434,13 +1434,15 @@
     </div>
 
     <!-- Cloud Storage, Persistence & Disaster Recovery Modal -->
-    <div id="storageModal" class="modal" style="display: none;">
-      <div class="modal-content" style="max-width: 650px; background: #0f172a; border: 1px solid #334155;">
-        <div class="modal-header" style="background: #1e293b; border-bottom: 1px solid #334155;">
-          <h3><i class="fa-solid fa-cloud-arrow-up" style="color: #10b981;"></i> Cloud Persistence &amp; Auto-Backup</h3>
+    <div id="storageModal" class="admin-modal-backdrop" style="display: none; z-index: 9999;" onclick="if(event.target === this) closeStorageModal()">
+      <div class="admin-modal" style="max-width: 650px; width: 92%; max-height: 90vh; background: #0f172a; border: 1px solid #334155; border-radius: 14px; overflow: hidden; display: flex; flex-direction: column; margin: auto;">
+        <div class="admin-modal-header" style="background: #1e293b; border-bottom: 1px solid #334155; padding: 14px 18px; display: flex; justify-content: space-between; align-items: center;">
+          <h3 style="margin: 0; font-size: 1.05rem; display: flex; align-items: center; gap: 8px; color: #f8fafc;">
+            <i class="fa-solid fa-cloud-arrow-up" style="color: #10b981;"></i> Cloud Persistence &amp; Auto-Backup
+          </h3>
           <button type="button" class="modal-close" onclick="closeStorageModal()"><i class="fa-solid fa-xmark"></i></button>
         </div>
-        <div class="modal-body" style="padding: 20px;">
+        <div class="admin-modal-body" style="padding: 20px; overflow-y: auto;">
           <!-- Storage Status Card -->
           <div class="storage-status-card" id="storageStatusBox" style="background: rgba(255,255,255,0.03); border: 1px solid #334155; border-radius: 10px; padding: 14px; margin-bottom: 18px;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
@@ -1471,20 +1473,19 @@
             </button>
           </div>
 
-          <!-- Free Tier Guide Accordion -->
+          <!-- Cloud & VPS Guide Accordion -->
           <div style="background: rgba(15, 23, 42, 0.8); border: 1px solid #334155; border-radius: 8px; padding: 14px; font-size: 0.82rem; line-height: 1.5; color: #cbd5e1;">
             <h4 style="margin: 0 0 8px 0; color: #38bdf8; font-size: 0.88rem; display: flex; align-items: center; gap: 6px;">
-              <i class="fa-solid fa-circle-info"></i> How to Keep Updates Saved on Render (Free Tier)
+              <i class="fa-solid fa-circle-info"></i> How Data is Kept Safe
             </h4>
-            <p style="margin: 0 0 8px 0;">On Render Free Tier, containers sleep after 15 minutes of inactivity and reset temporary disks. Use one of these 100% free solutions to keep your changes forever:</p>
             <ul style="padding-left: 20px; margin: 0; display: flex; flex-direction: column; gap: 6px;">
-              <li><strong>Solution 1 (Anti-Sleep Keep-Alive - 30 seconds):</strong> In your Render Web Service, go to <em>Environment</em> and set <code>APP_URL</code> to your Render app URL (e.g. <code>https://your-service.onrender.com</code>). The server will automatically ping itself every 10 minutes so Render never sleeps!</li>
-              <li><strong>Solution 2 (GitHub Gist - Free Cloud DB):</strong> Create a secret Gist at <code>gist.github.com</code>, create a GitHub token at <code>github.com/settings/tokens</code>, and add <code>GITHUB_TOKEN</code> and <code>GIST_ID</code> in Render's Environment. Every edit is permanently synced!</li>
-              <li><strong>Solution 3 (MongoDB Atlas - Free 512MB):</strong> Create a free database at <code>mongodb.com</code> and add <code>MONGODB_URI</code> to Render Environment.</li>
+              <li><strong>Oracle Cloud / Ubuntu VPS:</strong> Your updates are permanently stored on the server's disk (<code>backend/data/kolasib_vc_store.json</code>). They remain safe across reboots!</li>
+              <li><strong>Automated Device Snapshot:</strong> Every time you make an update in this Admin portal, a backup is also saved locally in your browser storage.</li>
+              <li><strong>Render Free Tier (if used):</strong> Set <code>APP_URL</code> in Render Environment to keep the app awake 24/7, or connect a free MongoDB Atlas URI / GitHub Gist for cloud DB persistence.</li>
             </ul>
           </div>
         </div>
-        <div class="modal-footer" style="background: #1e293b; border-top: 1px solid #334155;">
+        <div class="admin-modal-footer" style="background: #1e293b; border-top: 1px solid #334155; padding: 12px 18px; display: flex; justify-content: flex-end;">
           <button type="button" class="btn btn-secondary" onclick="closeStorageModal()">Close</button>
         </div>
       </div>

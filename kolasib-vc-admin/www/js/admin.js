@@ -440,6 +440,14 @@ async function openStorageModal() {
 
   if (badge) { badge.textContent = 'Checking...'; badge.className = 'storage-badge'; }
 
+  if (!adminState.pin) {
+    if (badge) {
+      badge.textContent = 'Please log in with Admin PIN';
+      badge.className = 'storage-badge ephemeral';
+    }
+    return;
+  }
+
   try {
     const res = await fetch(`${API_BASE}/api/admin/storage-status`, {
       headers: { 'X-Admin-PIN': adminState.pin }
@@ -452,15 +460,15 @@ async function openStorageModal() {
           badge.textContent = `🟢 ${d.provider === 'mongodb_atlas' ? 'MongoDB Atlas (Persistent)' : d.provider === 'github_gist' ? 'GitHub Gist (Persistent)' : 'Cloud Persistent'}`;
           badge.className = 'storage-badge persistent';
         } else {
-          badge.textContent = '⚠️ Local Storage (May reset on Render sleep)';
-          badge.className = 'storage-badge ephemeral';
+          badge.textContent = '🟢 Server Disk Storage (Persistent on VPS / Oracle)';
+          badge.className = 'storage-badge persistent';
         }
       }
       if (keepAlive) {
         if (d.keepAlive && d.keepAlive.active) {
           keepAlive.textContent = `🟢 Active (Pings every 10 min)`;
         } else {
-          keepAlive.textContent = `⚠️ Inactive (Set APP_URL on Render)`;
+          keepAlive.textContent = `🟢 Continuous (VPS / Oracle Always On)`;
         }
       }
       if (lastSaved && d.lastSaved) {
@@ -483,7 +491,13 @@ function closeStorageModal() {
 }
 
 function downloadFullBackup() {
-  window.open(`${API_BASE}/api/admin/backup?pin=${encodeURIComponent(adminState.pin)}`, '_blank');
+  const url = `${API_BASE}/api/admin/backup?pin=${encodeURIComponent(adminState.pin)}`;
+  const a = document.createElement('a');
+  a.href = url;
+  a.setAttribute('download', `mizoram_vc_backup_${new Date().toISOString().slice(0, 10)}.json`);
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
 }
 
 async function handleRestoreFile(event) {
