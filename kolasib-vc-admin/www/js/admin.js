@@ -498,10 +498,10 @@ async function saveContactChanges(e) {
       closeEditModal();
       fetchAdminData();
     } else {
-      alert(`Error: ${res.error}`);
+      showAdminToast(`Error: ${res.error}`);
     }
   } catch (err) {
-    alert('Failed to save changes. Please check server connection.');
+    showAdminToast('Failed to save changes. Please check server connection.');
   } finally {
     btn.disabled = false;
     btn.innerHTML = `<i class="fa-solid fa-cloud-arrow-up"></i> Save & Push Update`;
@@ -554,10 +554,10 @@ async function submitNewContact(e) {
       closeAddModal();
       fetchAdminData();
     } else {
-      alert(`Error: ${res.error}`);
+      showAdminToast(`Error: ${res.error}`);
     }
   } catch (err) {
-    alert('Failed to add contact.');
+    showAdminToast('Failed to add contact.');
   }
 }
 
@@ -576,10 +576,10 @@ async function deleteContactConfirm(contactId, name) {
       showAdminToast(`🗑️ Contact removed from Phonebooks!`);
       fetchAdminData();
     } else {
-      alert(`Delete error: ${res.error}`);
+      showAdminToast(`Delete error: ${res.error}`);
     }
   } catch (err) {
-    alert('Failed to delete contact.');
+    showAdminToast('Failed to delete contact.');
   }
 }
 
@@ -712,10 +712,10 @@ async function applyCorrectionReport(reportId, contactId, suggestedPhone, isEmer
       showAdminToast(`✅ Correction applied & pushed to all phonebooks!`);
       fetchAdminData();
     } else {
-      alert(`Error: ${res.error}`);
+      showAdminToast(`Error: ${res.error}`);
     }
   } catch (err) {
-    alert('Failed to resolve report.');
+    showAdminToast('Failed to resolve report.');
   }
 }
 
@@ -742,7 +742,7 @@ async function rejectReport(reportId) {
       fetchAdminData();
     }
   } catch (e) {
-    alert('Failed to reject report.');
+    showAdminToast('Failed to reject report.');
   }
 }
 
@@ -772,10 +772,10 @@ async function submitBroadcast(e) {
       document.getElementById('bcastMessage').value = '';
       fetchAdminData();
     } else {
-      alert(`Error: ${res.error}`);
+      showAdminToast(`Error: ${res.error}`);
     }
   } catch (e) {
-    alert('Failed to broadcast.');
+    showAdminToast('Failed to broadcast.');
   }
 }
 
@@ -851,10 +851,10 @@ async function deleteBroadcastConfirm(id) {
       showAdminToast(`🗑️ Announcement removed from citizen apps!`);
       fetchAdminData();
     } else {
-      alert(`Delete error: ${res.error}`);
+      showAdminToast(`Delete error: ${res.error}`);
     }
   } catch (err) {
-    alert('Failed to delete announcement.');
+    showAdminToast('Failed to delete announcement.');
   }
 }
 
@@ -1047,7 +1047,7 @@ async function copySheetCsvToClipboard() {
       showAdminToast(`✅ CSV copied to clipboard!`);
     }
   } catch (err) {
-    alert(`Could not copy to clipboard: ${err.message}`);
+    showAdminToast(`Could not copy to clipboard: ${err.message}`);
   }
 }
 
@@ -1105,7 +1105,7 @@ async function executeSheetImport() {
     const urlInput = document.getElementById('sheetImportUrlInput');
     const rawUrl = urlInput ? urlInput.value.trim() : '';
     if (!rawUrl) {
-      alert('Please enter a valid Google Sheets shared link.');
+      showAdminToast('Please enter a valid Google Sheets shared link.');
       if (urlInput) urlInput.focus();
       return;
     }
@@ -1114,7 +1114,7 @@ async function executeSheetImport() {
     const textInput = document.getElementById('sheetImportTextInput');
     const rawText = textInput ? textInput.value.trim() : '';
     if (!rawText) {
-      alert('Please paste CSV rows or copied spreadsheet data into the text box.');
+      showAdminToast('Please paste CSV rows or copied spreadsheet data into the text box.');
       if (textInput) textInput.focus();
       return;
     }
@@ -1129,7 +1129,7 @@ async function executeSheetImport() {
   } else {
     const fileInput = document.getElementById('sheetImportFileInput');
     if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
-      alert('Please choose a .csv file to import.');
+      showAdminToast('Please choose a .csv file to import.');
       return;
     }
 
@@ -1138,7 +1138,7 @@ async function executeSheetImport() {
       const csvContent = await readFileAsText(file);
       payload.csvText = csvContent;
     } catch (readErr) {
-      alert(`Could not read file: ${readErr.message}`);
+      showAdminToast(`Could not read file: ${readErr.message}`);
       return;
     }
   }
@@ -1395,10 +1395,10 @@ async function saveEmergencyChanges(e) {
       closeEditEmergencyModal();
       fetchAdminData();
     } else {
-      alert(`Error: ${res.error}`);
+      showAdminToast(`Error: ${res.error}`);
     }
   } catch (err) {
-    alert('Failed to save emergency changes.');
+    showAdminToast('Failed to save emergency changes.');
   } finally {
     btn.disabled = false;
     btn.innerHTML = `<i class="fa-solid fa-cloud-arrow-up"></i> Save &amp; Push Update`;
@@ -1454,10 +1454,10 @@ async function submitNewEmergency(e) {
       closeAddEmergencyModal();
       fetchAdminData();
     } else {
-      alert(`Error: ${res.error}`);
+      showAdminToast(`Error: ${res.error}`);
     }
   } catch (err) {
-    alert('Failed to add emergency service.');
+    showAdminToast('Failed to add emergency service.');
   } finally {
     btn.disabled = false;
     btn.innerHTML = `<i class="fa-solid fa-cloud-arrow-up"></i> Add &amp; Push to Phonebooks`;
@@ -1479,10 +1479,10 @@ async function deleteEmergencyConfirm(emId, service) {
       showAdminToast(`🗑️ Emergency contact removed from Phonebooks!`);
       fetchAdminData();
     } else {
-      alert(`Delete error: ${res.error}`);
+      showAdminToast(`Delete error: ${res.error}`);
     }
   } catch (err) {
-    alert('Failed to delete emergency contact.');
+    showAdminToast('Failed to delete emergency contact.');
   }
 }
 
@@ -1652,10 +1652,10 @@ async function submitNewOffice(e) {
       closeAddOfficeModal();
       fetchAdminData();
     } else {
-      alert(`Error: ${res.error}`);
+      showAdminToast(`Error: ${res.error}`);
     }
   } catch (err) {
-    alert('Failed to add office.');
+    showAdminToast('Failed to add office.');
   } finally {
     btn.disabled = false;
     btn.innerHTML = `<i class="fa-solid fa-cloud-arrow-up"></i> Add Office &amp; Push`;
@@ -1715,10 +1715,10 @@ async function saveOfficeChanges(e) {
       closeEditOfficeModal();
       fetchAdminData();
     } else {
-      alert(`Error: ${res.error}`);
+      showAdminToast(`Error: ${res.error}`);
     }
   } catch (err) {
-    alert('Failed to update office.');
+    showAdminToast('Failed to update office.');
   } finally {
     btn.disabled = false;
     btn.innerHTML = `<i class="fa-solid fa-cloud-arrow-up"></i> Save &amp; Push Update`;
@@ -1740,10 +1740,10 @@ async function deleteOfficeConfirm(officeId, name) {
       showAdminToast(`🗑️ Office removed from Phonebooks!`);
       fetchAdminData();
     } else {
-      alert(`Delete error: ${res.error}`);
+      showAdminToast(`Delete error: ${res.error}`);
     }
   } catch (err) {
-    alert('Failed to delete office.');
+    showAdminToast('Failed to delete office.');
   }
 }
 
@@ -1796,10 +1796,10 @@ async function submitNewStaff(e) {
       closeAddStaffModal();
       fetchAdminData();
     } else {
-      alert(`Error: ${res.error}`);
+      showAdminToast(`Error: ${res.error}`);
     }
   } catch (err) {
-    alert('Failed to add staff member.');
+    showAdminToast('Failed to add staff member.');
   } finally {
     btn.disabled = false;
     btn.innerHTML = `<i class="fa-solid fa-cloud-arrow-up"></i> Add Staff &amp; Push`;
@@ -1860,10 +1860,10 @@ async function saveStaffChanges(e) {
       closeEditStaffModal();
       fetchAdminData();
     } else {
-      alert(`Error: ${res.error}`);
+      showAdminToast(`Error: ${res.error}`);
     }
   } catch (err) {
-    alert('Failed to update staff member.');
+    showAdminToast('Failed to update staff member.');
   } finally {
     btn.disabled = false;
     btn.innerHTML = `<i class="fa-solid fa-cloud-arrow-up"></i> Save &amp; Push Update`;
@@ -1885,10 +1885,10 @@ async function deleteStaffConfirm(officeId, staffId, staffName) {
       showAdminToast(`🗑️ Staff member removed & synced!`);
       fetchAdminData();
     } else {
-      alert(`Delete error: ${res.error}`);
+      showAdminToast(`Delete error: ${res.error}`);
     }
   } catch (err) {
-    alert('Failed to delete staff member.');
+    showAdminToast('Failed to delete staff member.');
   }
 }
 
@@ -2019,10 +2019,10 @@ async function submitNewCouncil(e) {
       closeAddCouncilModal();
       fetchAdminData();
     } else {
-      alert(`Error: ${res.error}`);
+      showAdminToast(`Error: ${res.error}`);
     }
   } catch (err) {
-    alert('Failed to add council.');
+    showAdminToast('Failed to add council.');
   } finally {
     btn.disabled = false;
     btn.innerHTML = `<i class="fa-solid fa-cloud-arrow-up"></i> Add Council &amp; Push`;
@@ -2046,10 +2046,10 @@ async function deleteCouncilConfirm(villageId, villageName) {
       showAdminToast(`🗑️ Council removed from directory!`);
       fetchAdminData();
     } else {
-      alert(`Delete error: ${res.error}`);
+      showAdminToast(`Delete error: ${res.error}`);
     }
   } catch (err) {
-    alert('Failed to delete council.');
+    showAdminToast('Failed to delete council.');
   }
 }
 
@@ -2099,10 +2099,10 @@ async function saveDeveloperInfo(e) {
       showAdminToast(`ℹ️ Developer info updated & pushed to Phonebooks!`);
       adminState.appInfo = res.data;
     } else {
-      alert(`Error: ${res.error}`);
+      showAdminToast(`Error: ${res.error}`);
     }
   } catch (err) {
-    alert('Failed to save developer information.');
+    showAdminToast('Failed to save developer information.');
   } finally {
     btn.disabled = false;
     btn.innerHTML = `<i class="fa-solid fa-cloud-arrow-up"></i> Save &amp; Push Developer Info`;

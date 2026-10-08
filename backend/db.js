@@ -706,7 +706,24 @@ class Database {
     const list = this.data.broadcasts || [];
     const district = typeof filter === 'string' ? filter : filter.district;
     if (district && district !== 'All') {
-      return list.filter(b => !b.district || b.district === 'All' || b.district.toLowerCase() === district.toLowerCase());
+      const dLower = district.toLowerCase();
+      return list.filter(b => {
+        // District matches exactly
+        if (b.district && b.district.toLowerCase() === dLower) return true;
+        // State-wide announcement ('All')
+        if (!b.district || b.district === 'All') {
+          // If title specifically mentions a district other than the requested one, don't leak it
+          const allDistricts = ['kolasib', 'aizawl', 'lunglei', 'champhai', 'mamit', 'serchhip', 'siaha', 'lawngtlai', 'saitual', 'khawzawl', 'hnahthial'];
+          const titleLower = (b.title || '').toLowerCase();
+          for (const d of allDistricts) {
+            if (d !== dLower && titleLower.includes(d)) {
+              return false; // Specifically targeted at another district
+            }
+          }
+          return true;
+        }
+        return false;
+      });
     }
     return list;
   }

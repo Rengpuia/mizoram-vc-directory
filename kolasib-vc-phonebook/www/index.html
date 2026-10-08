@@ -320,6 +320,18 @@
       </div>
     </div>
 
+    <!-- In-App Official Confirmation Dialog (Hides browser page URL popup) -->
+    <div id="appAlertDialog" class="modal-backdrop" style="display: none; z-index: 150;">
+      <div class="modal-box app-alert-box" style="max-width: 380px; width: 90%; margin: auto; border-radius: 18px; padding: 22px 20px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.3); border: 1px solid var(--border);">
+        <div id="appAlertIcon" style="width: 52px; height: 52px; border-radius: 50%; margin: 0 auto 12px auto; display: flex; align-items: center; justify-content: center; font-size: 24px; background: rgba(16, 185, 129, 0.15); color: #10b981;">
+          <i class="fa-solid fa-circle-check"></i>
+        </div>
+        <h3 id="appAlertTitle" style="font-size: 1.12rem; font-weight: 700; color: #0f172a; margin-bottom: 6px;">Report Submitted</h3>
+        <p id="appAlertMsg" style="font-size: 0.86rem; color: #475569; line-height: 1.5; margin-bottom: 18px;">Your report has been forwarded directly to the District Administrator for review.</p>
+        <button id="appAlertBtn" class="btn btn-primary btn-block" style="padding: 10px 20px; border-radius: 10px; font-weight: 600; width: 100%;" onclick="closeAppAlert()">OK</button>
+      </div>
+    </div>
+
     <!-- Notification History Modal -->
     <div id="notificationHistoryModal" class="modal-backdrop" style="display: none;">
       <div class="modal-box" style="max-width: 480px; width: 92%; max-height: 85vh; display: flex; flex-direction: column;">

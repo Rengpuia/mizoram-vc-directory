@@ -3177,7 +3177,7 @@
       "message": "All Village Council contact records have been reviewed by the District Administration.",
       "priority": "normal",
       "createdAt": "2026-10-07T12:02:56.821Z",
-      "district": "All"
+      "district": "Kolasib"
     },
     {
       "id": "bcast-1",
@@ -3185,7 +3185,7 @@
       "message": "Official directory for Kolasib District Village Councils. Contacts verified by District Administration.",
       "priority": "normal",
       "createdAt": "2026-10-07T11:54:10.189Z",
-      "district": "All"
+      "district": "Kolasib"
     }
   ],
   "meta": {

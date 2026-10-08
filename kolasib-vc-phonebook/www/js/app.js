@@ -83,20 +83,25 @@ document.addEventListener('DOMContentLoaded', () => {
 // -------------------------------------------------------------
 function loadCachedData() {
   const distKey = state.currentDistrict;
-  const cachedContacts = localStorage.getItem(`kolasib_contacts_${distKey}`) || localStorage.getItem('kolasib_contacts');
-  const cachedEmergency = localStorage.getItem(`kolasib_emergency_${distKey}`) || localStorage.getItem('kolasib_emergency');
-  const cachedVillages = localStorage.getItem(`kolasib_villages_${distKey}`) || localStorage.getItem('kolasib_villages');
-  const cachedOffices = localStorage.getItem(`kolasib_offices_${distKey}`) || localStorage.getItem('kolasib_offices');
-  const cachedBroadcasts = localStorage.getItem(`kolasib_broadcasts_${distKey}`) || localStorage.getItem('kolasib_broadcasts');
-  const cachedBroadcast = localStorage.getItem(`kolasib_broadcast_${distKey}`) || localStorage.getItem('kolasib_broadcast');
+  const isKolasib = distKey.toLowerCase() === 'kolasib';
+  const cachedContacts = localStorage.getItem(`kolasib_contacts_${distKey}`) || (isKolasib ? localStorage.getItem('kolasib_contacts') : null);
+  const cachedEmergency = localStorage.getItem(`kolasib_emergency_${distKey}`) || (isKolasib ? localStorage.getItem('kolasib_emergency') : null);
+  const cachedVillages = localStorage.getItem(`kolasib_villages_${distKey}`) || (isKolasib ? localStorage.getItem('kolasib_villages') : null);
+  const cachedOffices = localStorage.getItem(`kolasib_offices_${distKey}`) || (isKolasib ? localStorage.getItem('kolasib_offices') : null);
+  const cachedBroadcasts = localStorage.getItem(`kolasib_broadcasts_${distKey}`);
+  const cachedBroadcast = localStorage.getItem(`kolasib_broadcast_${distKey}`);
   const cachedDistricts = localStorage.getItem('mizoram_districts');
   const cachedAppInfo = localStorage.getItem('kolasib_app_info');
 
   if (cachedBroadcasts) {
     try {
-      state.broadcasts = JSON.parse(cachedBroadcasts);
+      const parsed = JSON.parse(cachedBroadcasts);
+      state.broadcasts = isKolasib ? parsed : parsed.filter(b => !(b.title && b.title.toLowerCase().includes('kolasib')));
       updateNotificationBadge();
     } catch (e) {}
+  } else {
+    state.broadcasts = [];
+    updateNotificationBadge();
   }
 
   if (cachedAppInfo) {
@@ -115,7 +120,7 @@ function loadCachedData() {
   if (cachedContacts) {
     try {
       state.contacts = JSON.parse(cachedContacts);
-      updateSyncBadge(true, 'Cached Data Loaded');
+      updateSyncBadge(true, `Cached Data: ${state.currentDistrict}`);
       updateCategoryChips();
       applyFilters();
     } catch (e) {
@@ -146,8 +151,15 @@ function loadCachedData() {
 
   if (cachedBroadcast) {
     try {
-      showBroadcast(JSON.parse(cachedBroadcast));
+      const bObj = JSON.parse(cachedBroadcast);
+      if (isKolasib || !(bObj.title && bObj.title.toLowerCase().includes('kolasib'))) {
+        showBroadcast(bObj);
+      } else {
+        dismissBroadcast();
+      }
     } catch (e) {}
+  } else {
+    dismissBroadcast();
   }
 }
 
@@ -213,15 +225,23 @@ async function fetchFreshData() {
     }
 
     if (bcastRes.success && bcastRes.data) {
-      state.broadcasts = bcastRes.data;
+      const isKolasib = distKey.toLowerCase() === 'kolasib';
+      state.broadcasts = bcastRes.data.filter(b => {
+        if (!isKolasib && b.title && b.title.toLowerCase().includes('kolasib')) {
+          return false;
+        }
+        return true;
+      });
+
       localStorage.setItem(`kolasib_broadcasts_${distKey}`, JSON.stringify(state.broadcasts));
       updateNotificationBadge();
       if (state.broadcasts.length > 0) {
         showBroadcast(state.broadcasts[0]);
-        const lastNotified = localStorage.getItem('kolasib_last_notified_bcast');
+        const lastNotifiedKey = `kolasib_last_notified_bcast_${distKey}`;
+        const lastNotified = localStorage.getItem(lastNotifiedKey);
         if (!lastNotified || lastNotified !== state.broadcasts[0].id) {
-          localStorage.setItem('kolasib_last_notified_bcast', state.broadcasts[0].id);
-          triggerPhoneNotification(state.broadcasts[0].title || 'Government Announcement', state.broadcasts[0].message, 'bcast_' + state.broadcasts[0].id);
+          localStorage.setItem(lastNotifiedKey, state.broadcasts[0].id);
+          triggerPhoneNotification(state.broadcasts[0].title || `${state.currentDistrict} Announcement`, state.broadcasts[0].message, 'bcast_' + state.broadcasts[0].id);
         }
       } else {
         dismissBroadcast();
@@ -357,8 +377,10 @@ function selectDistrict(districtName) {
   state.currentRole = 'All';
   document.getElementById('roleFilter').value = 'All';
   closeDistrictModal();
+  dismissBroadcast();
   updateDistrictUI();
   loadCachedData();
+  showLiveToast(`Switched to ${districtName} District`);
   fetchFreshData();
 }
 
@@ -448,6 +470,9 @@ function initSSEPushListener() {
         if (payload.broadcast) {
           const b = payload.broadcast;
           if (!b.district || b.district === 'All' || b.district.toLowerCase() === state.currentDistrict.toLowerCase()) {
+            if (state.currentDistrict.toLowerCase() !== 'kolasib' && b.title && b.title.toLowerCase().includes('kolasib')) {
+              return; // Targeted specifically at Kolasib, do not notify in another district
+            }
             state.broadcasts = state.broadcasts.filter(x => x.id !== b.id);
             state.broadcasts.unshift(b);
             localStorage.setItem(`kolasib_broadcasts_${state.currentDistrict}`, JSON.stringify(state.broadcasts));
@@ -916,7 +941,7 @@ function renderContacts() {
     // Formatted WhatsApp phone (remove leading 0 or symbols, prepend 91 for India)
     const cleanPhone = c.phone.replace(/[^0-9]/g, '');
     const waPhone = cleanPhone.startsWith('91') ? cleanPhone : `91${cleanPhone}`;
-    const waMsg = encodeURIComponent(`Chibai Pu/Pi ${c.name}, VC (${c.villageName}) atanga biak che ka duh e.`);
+    const waMsg = encodeURIComponent(`Chibai Pu/Pi ${c.name} (${c.villageName}), khawngaih in ka be thei che angem.`);
 
     return `
       <article class="contact-card" id="card-${c.id}">
@@ -1008,7 +1033,7 @@ function renderOffices() {
     ` : staffList.map(stf => {
       const cleanStfPhone = stf.phone ? stf.phone.replace(/[^0-9]/g, '') : '';
       const waPhone = cleanStfPhone.startsWith('91') ? cleanStfPhone : `91${cleanStfPhone}`;
-      const waMsg = encodeURIComponent(`Chibai Pu/Pi ${stf.name}, (${off.name}) atanga biak che ka duh e.`);
+      const waMsg = encodeURIComponent(`Chibai Pu/Pi ${stf.name} (${off.name}), khawngaih in ka be thei che angem.`);
 
       return `
         <div class="office-staff-item">
@@ -1357,16 +1382,56 @@ async function submitCorrectionReport(e) {
     }).then(r => r.json());
 
     if (res.success) {
-      alert(`Thank you! Your correction report has been forwarded directly to the ${state.currentDistrict} District Administrator for review.`);
       closeReportModal();
+      showAppAlert(
+        'Report Forwarded',
+        `Thank you! Your correction report has been forwarded directly to the ${state.currentDistrict} District Administrator for review.`,
+        true
+      );
     } else {
-      alert(`Submission error: ${res.error || 'Please try again'}`);
+      showAppAlert('Submission Error', res.error || 'Please check the details and try again.', false);
     }
   } catch (err) {
-    alert('Unable to submit right now. Please check your internet connection and try again.');
+    showAppAlert('Connection Notice', 'Unable to submit right now. Please check your internet connection and try again.', false);
   } finally {
     btn.disabled = false;
     btn.innerHTML = `<i class="fa-solid fa-paper-plane"></i> Submit to Admin`;
+  }
+}
+
+// In-App Dialog Helper (completely hides browser URLs & alerts)
+function showAppAlert(title, message, isSuccess = true, callback = null) {
+  const dlg = document.getElementById('appAlertDialog');
+  const icon = document.getElementById('appAlertIcon');
+  const titleEl = document.getElementById('appAlertTitle');
+  const msgEl = document.getElementById('appAlertMsg');
+  if (!dlg) {
+    showLiveToast(message);
+    if (callback) callback();
+    return;
+  }
+  if (isSuccess) {
+    icon.style.background = 'rgba(16, 185, 129, 0.15)';
+    icon.style.color = '#10b981';
+    icon.innerHTML = '<i class="fa-solid fa-circle-check"></i>';
+  } else {
+    icon.style.background = 'rgba(239, 68, 68, 0.15)';
+    icon.style.color = '#ef4444';
+    icon.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i>';
+  }
+  titleEl.textContent = title;
+  msgEl.textContent = message;
+  dlg.style.display = 'flex';
+  window._appAlertCallback = callback;
+}
+
+function closeAppAlert() {
+  const dlg = document.getElementById('appAlertDialog');
+  if (dlg) dlg.style.display = 'none';
+  if (typeof window._appAlertCallback === 'function') {
+    const cb = window._appAlertCallback;
+    window._appAlertCallback = null;
+    cb();
   }
 }
 
@@ -1383,11 +1448,15 @@ function formatPhone(num) {
 }
 
 function copyContact(name, phone) {
-  navigator.clipboard.writeText(phone).then(() => {
-    showLiveToast(`📋 Copied ${name}'s number: ${phone}`);
-  }).catch(() => {
-    alert(`Phone Number: ${phone}`);
-  });
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(phone).then(() => {
+      showLiveToast(`📋 Copied ${name}'s number: ${phone}`);
+    }).catch(() => {
+      showLiveToast(`Number: ${phone}`);
+    });
+  } else {
+    showLiveToast(`Number: ${phone}`);
+  }
 }
 
 function escapeHtml(text) {
