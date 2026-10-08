@@ -378,6 +378,20 @@ function setupAdminListeners() {
       renderAdminCouncils();
     });
   });
+
+  // Prompt dialog keyboard events (Enter to submit, Escape to cancel)
+  const promptInput = document.getElementById('adminPromptInput');
+  if (promptInput) {
+    promptInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        submitAdminPrompt();
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        closeAdminPrompt(null);
+      }
+    });
+  }
 }
 
 function renderAdminContacts() {
@@ -562,7 +576,12 @@ async function submitNewContact(e) {
 }
 
 async function deleteContactConfirm(contactId, name) {
-  if (!confirm(`Are you sure you want to delete ${name}? This will remove the contact from all Phonebook apps in real-time.`)) {
+  const confirmed = await showAdminConfirm(
+    `Are you sure you want to delete ${name}? This will remove the contact from all Phonebook apps in real-time.`,
+    'Remove Contact from Directory',
+    { danger: true, confirmText: 'Delete Contact' }
+  );
+  if (!confirmed) {
     return;
   }
 
@@ -671,7 +690,12 @@ function updatePendingReportBadge() {
 }
 
 async function applyCorrectionReport(reportId, contactId, suggestedPhone, isEmergency = false, isOffice = false) {
-  const note = prompt('Confirm action note (optional):', `Applied suggested phone: ${suggestedPhone}`);
+  const note = await showAdminPrompt(
+    'Confirm action note (optional):',
+    `Applied suggested phone: ${suggestedPhone}`,
+    'Apply Correction & Push Update',
+    { danger: false, confirmText: 'Apply & Push', placeholder: 'Enter action note...' }
+  );
   if (note === null) return;
 
   let contactUpdates = null;
@@ -720,7 +744,12 @@ async function applyCorrectionReport(reportId, contactId, suggestedPhone, isEmer
 }
 
 async function rejectReport(reportId) {
-  const reason = prompt('Reason for rejection (e.g., Number verified as active):', 'Information not verified');
+  const reason = await showAdminPrompt(
+    'Reason for rejection (e.g., Number verified as active):',
+    'Information not verified',
+    'Reject Citizen Report',
+    { danger: true, confirmText: 'Reject Report', placeholder: 'Enter rejection reason...' }
+  );
   if (reason === null) return;
 
   try {
@@ -837,7 +866,12 @@ function renderAdminBroadcasts() {
 async function deleteBroadcastConfirm(id) {
   const b = (adminState.broadcasts || []).find(x => x.id === id);
   const title = b ? b.title : 'this announcement';
-  if (!confirm(`Are you sure you want to delete "${title}"? This will remove the notice from all Citizen phonebook apps in real-time.`)) {
+  const confirmed = await showAdminConfirm(
+    `Are you sure you want to delete "${title}"? This will remove the notice from all Citizen phonebook apps in real-time.`,
+    'Delete Active Notification & History',
+    { danger: true, confirmText: 'Delete Notice' }
+  );
+  if (!confirmed) {
     return;
   }
 
@@ -1254,6 +1288,114 @@ function showAdminToast(msg) {
   }, 4000);
 }
 
+// -------------------------------------------------------------
+// In-App Dialogs (Replaces native browser confirm & prompt)
+// Prevents displaying host URL / origin headers in popups
+// -------------------------------------------------------------
+let adminConfirmResolver = null;
+function showAdminConfirm(message, title = 'Confirm Action', options = {}) {
+  return new Promise((resolve) => {
+    adminConfirmResolver = resolve;
+    const modal = document.getElementById('adminConfirmModal');
+    const msgEl = document.getElementById('adminConfirmMessage');
+    const titleEl = document.getElementById('adminConfirmTitle');
+    const iconEl = document.getElementById('adminConfirmIcon');
+    const okBtn = document.getElementById('btnAdminConfirmOk');
+
+    if (msgEl) msgEl.textContent = message;
+    if (titleEl) titleEl.textContent = title;
+    if (okBtn) {
+      okBtn.textContent = options.confirmText || 'Confirm';
+      if (options.danger !== false) {
+        okBtn.className = 'btn btn-danger';
+        if (iconEl) {
+          iconEl.className = 'fa-solid fa-triangle-exclamation';
+          iconEl.style.color = '#ef4444';
+        }
+      } else {
+        okBtn.className = 'btn btn-primary';
+        if (iconEl) {
+          iconEl.className = 'fa-solid fa-circle-question';
+          iconEl.style.color = '#38bdf8';
+        }
+      }
+    }
+    if (modal) modal.style.display = 'flex';
+  });
+}
+
+function closeAdminConfirm(result) {
+  const modal = document.getElementById('adminConfirmModal');
+  if (modal) modal.style.display = 'none';
+  if (adminConfirmResolver) {
+    const res = adminConfirmResolver;
+    adminConfirmResolver = null;
+    res(!!result);
+  }
+}
+
+let adminPromptResolver = null;
+function showAdminPrompt(message, defaultValue = '', title = 'Action Input', options = {}) {
+  return new Promise((resolve) => {
+    adminPromptResolver = resolve;
+    const modal = document.getElementById('adminPromptModal');
+    const msgEl = document.getElementById('adminPromptMessage');
+    const titleEl = document.getElementById('adminPromptTitle');
+    const inputEl = document.getElementById('adminPromptInput');
+    const iconEl = document.getElementById('adminPromptIcon');
+    const okBtn = document.getElementById('btnAdminPromptOk');
+
+    if (msgEl) msgEl.textContent = message;
+    if (titleEl) titleEl.textContent = title;
+    if (inputEl) {
+      inputEl.value = defaultValue || '';
+      inputEl.placeholder = options.placeholder || '';
+    }
+    if (okBtn) {
+      okBtn.textContent = options.confirmText || 'Submit';
+      if (options.danger) {
+        okBtn.className = 'btn btn-danger';
+        if (iconEl) {
+          iconEl.className = 'fa-solid fa-triangle-exclamation';
+          iconEl.style.color = '#ef4444';
+        }
+      } else {
+        okBtn.className = 'btn btn-primary';
+        if (iconEl) {
+          iconEl.className = 'fa-solid fa-pen-to-square';
+          iconEl.style.color = '#38bdf8';
+        }
+      }
+    }
+    if (modal) modal.style.display = 'flex';
+    if (inputEl) {
+      setTimeout(() => {
+        inputEl.focus();
+        inputEl.select();
+      }, 50);
+    }
+  });
+}
+
+function submitAdminPrompt() {
+  const inputEl = document.getElementById('adminPromptInput');
+  const val = inputEl ? inputEl.value : '';
+  closeAdminPrompt(val);
+}
+
+function closeAdminPrompt(result) {
+  const modal = document.getElementById('adminPromptModal');
+  if (modal) modal.style.display = 'none';
+  if (adminPromptResolver) {
+    const res = adminPromptResolver;
+    adminPromptResolver = null;
+    res(result);
+  }
+}
+
+// Global safety override to prevent any native browser dialogs with origin URLs:
+window.alert = function(msg) { showAdminToast(msg); };
+
 function formatDate(isoStr) {
   if (!isoStr) return '';
   const d = new Date(isoStr);
@@ -1465,7 +1607,12 @@ async function submitNewEmergency(e) {
 }
 
 async function deleteEmergencyConfirm(emId, service) {
-  if (!confirm(`Are you sure you want to delete ${service}? This will remove it from all citizen Phonebook apps in real-time.`)) {
+  const confirmed = await showAdminConfirm(
+    `Are you sure you want to delete ${service}? This will remove it from all citizen Phonebook apps in real-time.`,
+    'Remove Emergency Contact',
+    { danger: true, confirmText: 'Delete Contact' }
+  );
+  if (!confirmed) {
     return;
   }
 
@@ -1726,7 +1873,12 @@ async function saveOfficeChanges(e) {
 }
 
 async function deleteOfficeConfirm(officeId, name) {
-  if (!confirm(`Are you sure you want to delete ${name}? This will remove the office and all its staff members from all Phonebook apps in real-time.`)) {
+  const confirmed = await showAdminConfirm(
+    `Are you sure you want to delete ${name}? This will remove the office and all its staff members from all Phonebook apps in real-time.`,
+    'Remove Office & Staff',
+    { danger: true, confirmText: 'Delete Office' }
+  );
+  if (!confirmed) {
     return;
   }
 
@@ -1871,7 +2023,12 @@ async function saveStaffChanges(e) {
 }
 
 async function deleteStaffConfirm(officeId, staffId, staffName) {
-  if (!confirm(`Are you sure you want to remove ${staffName} from this office? This will update all citizen Phonebooks immediately.`)) {
+  const confirmed = await showAdminConfirm(
+    `Are you sure you want to remove ${staffName} from this office? This will update all citizen Phonebooks immediately.`,
+    'Remove Office Staff',
+    { danger: true, confirmText: 'Remove Staff' }
+  );
+  if (!confirmed) {
     return;
   }
 
@@ -2032,7 +2189,12 @@ async function submitNewCouncil(e) {
 async function deleteCouncilConfirm(villageId, villageName) {
   const target = adminState.villages.find(v => v.id === villageId);
   const nameToDisplay = villageName || (target ? target.name : 'this Council');
-  if (!confirm(`Are you sure you want to remove ${nameToDisplay}? This will remove the council and all its contacts from directory listings in real-time.`)) {
+  const confirmed = await showAdminConfirm(
+    `Are you sure you want to remove ${nameToDisplay}? This will remove the council and all its contacts from directory listings in real-time.`,
+    'Remove Village Council',
+    { danger: true, confirmText: 'Remove Council' }
+  );
+  if (!confirmed) {
     return;
   }
 

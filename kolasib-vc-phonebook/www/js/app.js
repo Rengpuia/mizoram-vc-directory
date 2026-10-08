@@ -82,7 +82,7 @@ document.addEventListener('DOMContentLoaded', () => {
 // Offline Caching & Data Hydration
 // -------------------------------------------------------------
 function loadCachedData() {
-  const distKey = state.currentDistrict;
+  const distKey = state.currentDistrict || 'Kolasib';
   const isKolasib = distKey.toLowerCase() === 'kolasib';
   const cachedContacts = localStorage.getItem(`kolasib_contacts_${distKey}`) || (isKolasib ? localStorage.getItem('kolasib_contacts') : null);
   const cachedEmergency = localStorage.getItem(`kolasib_emergency_${distKey}`) || (isKolasib ? localStorage.getItem('kolasib_emergency') : null);
@@ -93,15 +93,13 @@ function loadCachedData() {
   const cachedDistricts = localStorage.getItem('mizoram_districts');
   const cachedAppInfo = localStorage.getItem('kolasib_app_info');
 
-  if (cachedBroadcasts) {
+  let hasValidContacts = false;
+
+  if (cachedDistricts) {
     try {
-      const parsed = JSON.parse(cachedBroadcasts);
-      state.broadcasts = isKolasib ? parsed : parsed.filter(b => !(b.title && b.title.toLowerCase().includes('kolasib')));
-      updateNotificationBadge();
+      const parsedDist = JSON.parse(cachedDistricts);
+      if (Array.isArray(parsedDist) && parsedDist.length > 0) state.districts = parsedDist;
     } catch (e) {}
-  } else {
-    state.broadcasts = [];
-    updateNotificationBadge();
   }
 
   if (cachedAppInfo) {
@@ -111,42 +109,59 @@ function loadCachedData() {
     } catch (e) {}
   }
 
-  if (cachedDistricts) {
-    try {
-      state.districts = JSON.parse(cachedDistricts);
-    } catch (e) {}
-  }
-
   if (cachedContacts) {
     try {
-      state.contacts = JSON.parse(cachedContacts);
-      updateSyncBadge(true, `Cached Data: ${state.currentDistrict}`);
-      updateCategoryChips();
-      applyFilters();
-    } catch (e) {
-      console.warn('Cache parse failed', e);
-    }
+      const parsed = JSON.parse(cachedContacts);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        state.contacts = parsed;
+        hasValidContacts = true;
+      }
+    } catch (e) {}
   }
 
   if (cachedEmergency) {
     try {
-      state.emergency = JSON.parse(cachedEmergency);
-      renderEmergency();
+      const parsed = JSON.parse(cachedEmergency);
+      if (Array.isArray(parsed) && parsed.length > 0) state.emergency = parsed;
     } catch (e) {}
   }
 
   if (cachedVillages) {
     try {
-      state.villages = JSON.parse(cachedVillages);
-      renderVillages();
+      const parsed = JSON.parse(cachedVillages);
+      if (Array.isArray(parsed) && parsed.length > 0) state.villages = parsed;
     } catch (e) {}
   }
 
   if (cachedOffices) {
     try {
-      state.offices = JSON.parse(cachedOffices);
-      applyOfficeFilters();
+      const parsed = JSON.parse(cachedOffices);
+      if (Array.isArray(parsed) && parsed.length > 0) state.offices = parsed;
     } catch (e) {}
+  }
+
+  // If no cached contacts exist (e.g. freshly installed app opened offline or cache cleared),
+  // immediately hydrate from bundled offline dataset so the user never sees an empty screen!
+  if (!hasValidContacts && window.BUNDLED_OFFLINE_DATA) {
+    hydrateFromBundledOfflineData(distKey);
+  } else {
+    updateCategoryChips();
+    applyFilters();
+    renderEmergency();
+    renderVillages();
+    applyOfficeFilters();
+    updateSyncBadge(true, `Cached Data: ${state.currentDistrict}`);
+  }
+
+  if (cachedBroadcasts) {
+    try {
+      const parsed = JSON.parse(cachedBroadcasts);
+      state.broadcasts = isKolasib ? parsed : parsed.filter(b => !(b.title && b.title.toLowerCase().includes('kolasib')));
+      updateNotificationBadge();
+    } catch (e) {}
+  } else {
+    state.broadcasts = [];
+    updateNotificationBadge();
   }
 
   if (cachedBroadcast) {
@@ -161,6 +176,57 @@ function loadCachedData() {
   } else {
     dismissBroadcast();
   }
+}
+
+function hydrateFromBundledOfflineData(distKey) {
+  if (!window.BUNDLED_OFFLINE_DATA) return;
+  const d = window.BUNDLED_OFFLINE_DATA;
+  const targetDist = distKey || state.currentDistrict || 'Kolasib';
+  const isAll = targetDist.toLowerCase() === 'all';
+
+  if ((!state.districts || state.districts.length === 0) && Array.isArray(d.districts)) {
+    state.districts = d.districts;
+  }
+  if (!state.appInfo && d.appInfo) {
+    state.appInfo = d.appInfo;
+  }
+
+  if (Array.isArray(d.contacts)) {
+    const list = isAll
+      ? d.contacts
+      : d.contacts.filter(c => (c.district || 'Kolasib').toLowerCase() === targetDist.toLowerCase());
+    state.contacts = (list.length > 0 || isAll) ? list : d.contacts;
+  }
+
+  if (Array.isArray(d.emergency)) {
+    state.emergency = isAll
+      ? d.emergency
+      : d.emergency.filter(e => {
+          const ed = (e.district || 'All').toLowerCase();
+          return ed === 'all' || ed === targetDist.toLowerCase();
+        });
+  }
+
+  if (Array.isArray(d.villages)) {
+    state.villages = isAll
+      ? d.villages
+      : d.villages.filter(v => (v.district || 'Kolasib').toLowerCase() === targetDist.toLowerCase());
+  }
+
+  if (Array.isArray(d.offices)) {
+    state.offices = isAll
+      ? d.offices
+      : d.offices.filter(o => (o.district || 'Kolasib').toLowerCase() === targetDist.toLowerCase());
+  }
+
+  updateCategoryChips();
+  applyFilters();
+  renderEmergency();
+  renderVillages();
+  applyOfficeFilters();
+  updateDistrictUI();
+  updateAppInfoUI();
+  updateSyncBadge(false, `Offline Directory (${state.contacts.length} Contacts)`);
 }
 
 function saveToCache() {
@@ -258,7 +324,11 @@ async function fetchFreshData() {
     updateSyncBadge(true, `Live Sync: ${state.currentDistrict}`);
   } catch (err) {
     console.warn('Network sync failed, running in offline mode:', err);
-    updateSyncBadge(false, 'Offline (Cached Mode)');
+    if ((!state.contacts || state.contacts.length === 0) && window.BUNDLED_OFFLINE_DATA) {
+      hydrateFromBundledOfflineData(state.currentDistrict);
+    } else {
+      updateSyncBadge(false, 'Offline (Cached Mode)');
+    }
   }
 }
 

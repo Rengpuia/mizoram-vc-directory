@@ -1003,6 +1003,12 @@ const adminPath = path.join(__dirname, '..', 'kolasib-vc-admin', 'www');
 const simulatorPath = path.join(__dirname, '..', 'simulator');
 const releaseApksPath = path.join(__dirname, '..', 'release_apks');
 
+app.get('/downloads/kolasib-vc-phonebook.apk', (req, res) => {
+  res.redirect(301, '/downloads/Mizoram_VC_Phonebook.apk');
+});
+app.get('/downloads/kolasib-vc-admin.apk', (req, res) => {
+  res.redirect(301, '/downloads/Mizoram_VC_Admin.apk');
+});
 app.use('/downloads', express.static(releaseApksPath));
 app.use('/phonebook', express.static(phonebookPath));
 app.use('/admin', express.static(adminPath));
