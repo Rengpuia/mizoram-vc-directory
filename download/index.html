@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+  <title>Download Citizen App — Mizoram Village Council Phonebook</title>
+  
+  <meta name="description" content="Official Android App download for Mizoram State & Kolasib District Village Council Phonebook.">
+  <meta name="theme-color" content="#0284c7">
+  
+  <link rel="icon" type="image/png" href="icon-192.png">
+  <link rel="apple-touch-icon" href="icon-192.png">
+
+  <!-- Open Graph metadata for rich WhatsApp / Facebook link previews -->
+  <meta property="og:title" content="Mizoram Village Council Phonebook — Official Citizen App">
+  <meta property="og:description" content="Download the official Android App for Village Council contacts. Works 100% offline.">
+  <meta property="og:image" content="icon-512.png">
+  <meta property="og:type" content="website">
+
+  <!-- Google Fonts & FontAwesome -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <!-- QRCode.js for instant QR generation -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+  <style>
+    :root {
+      --primary: #0284c7;
+      --primary-dark: #0369a1;
+      --primary-light: #e0f2fe;
+      --accent: #10b981;
+      --accent-dark: #059669;
+      --bg: #0b1120;
+      --card-bg: rgba(30, 41, 59, 0.85);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --radius: 16px;
+      --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background: radial-gradient(circle at 50% 0%, #1e293b 0%, #0b1120 70%);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 0 16px 40px 16px;
+    }
+
+    /* Top Government Header */
+    .gov-top-bar {
+      width: 100%;
+      max-width: 680px;
+      padding: 16px 0 12px 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--card-border);
+      margin-bottom: 24px;
+    }
+
+    .gov-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .gov-emblem {
+      width: 32px;
+      height: 32px;
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #ffffff;
+      font-size: 0.95rem;
+      box-shadow: 0 2px 8px rgba(245, 158, 11, 0.4);
+    }
+
+    .gov-titles h2 {
+      font-size: 0.88rem;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      color: #f8fafc;
+      text-transform: uppercase;
+      line-height: 1.2;
+    }
+
+    .gov-titles p {
+      font-size: 0.72rem;
+      color: #38bdf8;
+      font-weight: 600;
+      margin-top: 2px;
+    }
+
+    .lang-switcher {
+      display: flex;
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid var(--card-border);
+      border-radius: 999px;
+      padding: 3px;
+      gap: 2px;
+    }
+
+    .lang-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .lang-btn.active {
+      background: var(--primary);
+      color: #ffffff;
+      box-shadow: 0 2px 6px rgba(2, 132, 199, 0.4);
+    }
+
+    /* Main Container */
+    .download-container {
+      width: 100%;
+      max-width: 680px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* Hero Download Card */
+    .hero-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      backdrop-filter: blur(16px);
+      border-radius: var(--radius);
+      padding: 30px 24px;
+      text-align: center;
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-card::before {
+      content: '';
+      position: absolute;
+      top: -50px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 200px;
+      height: 200px;
+      background: radial-gradient(circle, rgba(2, 132, 199, 0.25) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .app-icon-wrap {
+      position: relative;
+      width: 104px;
+      height: 104px;
+      margin: 0 auto 18px auto;
+    }
+
+    .app-icon {
+      width: 100%;
+      height: 100%;
+      border-radius: 24px;
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.5), 0 0 0 2px rgba(255, 255, 255, 0.15);
+      object-fit: cover;
+      display: block;
+    }
+
+    .badge-verified {
+      position: absolute;
+      bottom: -6px;
+      right: -6px;
+      background: #10b981;
+      color: #ffffff;
+      font-size: 0.72rem;
+      font-weight: 800;
+      padding: 3px 8px;
+      border-radius: 999px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+      border: 2px solid #0f172a;
+    }
+
+    .app-title {
+      font-size: 1.55rem;
+      font-weight: 800;
+      color: #ffffff;
+      line-height: 1.25;
+      margin-bottom: 6px;
+      letter-spacing: -0.3px;
+    }
+
+    .app-subtitle {
+      font-size: 0.9rem;
+      color: #94a3b8;
+      max-width: 480px;
+      margin: 0 auto 18px auto;
+      line-height: 1.5;
+    }
+
+    .meta-pills {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 24px;
+    }
+
+    .meta-pill {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #cbd5e1;
+      padding: 4px 10px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .meta-pill i {
+      color: #38bdf8;
+    }
+
+    /* Main Download CTA Button */
+    .btn-download-apk {
+      background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+      color: #ffffff;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      border-radius: 14px;
+      box-shadow: 0 8px 24px rgba(2, 132, 199, 0.45);
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      cursor: pointer;
+      position: relative;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .btn-download-apk:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 28px rgba(2, 132, 199, 0.6);
+      background: linear-gradient(135deg, #0369a1 0%, #0284c7 100%);
+    }
+
+    .btn-download-apk:active {
+      transform: translateY(1px);
+    }
+
+    .btn-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      text-align: left;
+    }
+
+    .btn-icon-android {
+      font-size: 2rem;
+      color: #ffffff;
+    }
+
+    .btn-text-main {
+      font-size: 1.12rem;
+      font-weight: 800;
+      line-height: 1.2;
+      display: block;
+    }
+
+    .btn-text-sub {
+      font-size: 0.78rem;
+      color: #bae6fd;
+      font-weight: 500;
+      margin-top: 2px;
+      display: block;
+    }
+
+    .btn-size-tag {
+      background: rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(4px);
+      font-size: 0.8rem;
+      font-weight: 700;
+      padding: 6px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      white-space: nowrap;
+    }
+
+    /* Alternative: Open Web App Link */
+    .web-alt-box {
+      margin-top: 18px;
+      padding-top: 16px;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      font-size: 0.84rem;
+      color: var(--text-muted);
+    }
+
+    .btn-open-web {
+      color: #38bdf8;
+      text-decoration: none;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: color 0.15s ease;
+    }
+
+    .btn-open-web:hover {
+      color: #7dd3fc;
+      text-decoration: underline;
+    }
+
+    /* Installation Steps Card */
+    .section-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius);
+      padding: 22px;
+      box-shadow: var(--shadow);
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .section-header i {
+      color: #38bdf8;
+      font-size: 1.1rem;
+    }
+
+    .section-header h3 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #ffffff;
+    }
+
+    .steps-list {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .step-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      background: rgba(15, 23, 42, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 12px;
+      padding: 12px 14px;
+    }
+
+    .step-num {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: #0284c7;
+      color: #ffffff;
+      font-weight: 800;
+      font-size: 0.85rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      box-shadow: 0 2px 6px rgba(2, 132, 199, 0.3);
+    }
+
+    .step-content h4 {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: #f8fafc;
+      margin-bottom: 3px;
+    }
+
+    .step-content p {
+      font-size: 0.8rem;
+      color: #94a3b8;
+      line-height: 1.45;
+    }
+
+    .step-content .highlight {
+      color: #38bdf8;
+      font-weight: 600;
+    }
+
+    /* Key Features Grid */
+    .features-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    @media (max-width: 540px) {
+      .features-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .feature-card {
+      background: rgba(15, 23, 42, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 12px;
+      padding: 14px;
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+    }
+
+    .feature-icon-box {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: rgba(2, 132, 199, 0.15);
+      color: #38bdf8;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.95rem;
+      flex-shrink: 0;
+    }
+
+    .feature-text h4 {
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 2px;
+    }
+
+    .feature-text p {
+      font-size: 0.78rem;
+      color: #94a3b8;
+      line-height: 1.4;
+    }
+
+    /* Share & QR Code Card */
+    .share-row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 14px;
+    }
+
+    .btn-share-wa {
+      flex: 1;
+      min-width: 180px;
+      background: #10b981;
+      color: #ffffff;
+      text-decoration: none;
+      padding: 12px 16px;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 0.88rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+      transition: background 0.15s ease;
+    }
+
+    .btn-share-wa:hover {
+      background: #059669;
+    }
+
+    .btn-copy-link {
+      background: rgba(255, 255, 255, 0.08);
+      color: #f8fafc;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      padding: 12px 16px;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 0.88rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .btn-copy-link:hover {
+      background: rgba(255, 255, 255, 0.14);
+    }
+
+    .qr-container {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 12px;
+      padding: 14px;
+      margin-top: 16px;
+    }
+
+    #qrcodeBox {
+      background: #ffffff;
+      padding: 8px;
+      border-radius: 8px;
+      flex-shrink: 0;
+    }
+
+    .qr-text {
+      font-size: 0.82rem;
+      color: #cbd5e1;
+      line-height: 1.45;
+    }
+
+    .qr-text strong {
+      color: #ffffff;
+      display: block;
+      margin-bottom: 3px;
+    }
+
+    /* Footer */
+    .download-footer {
+      width: 100%;
+      max-width: 680px;
+      text-align: center;
+      margin-top: 24px;
+      padding-top: 20px;
+      border-top: 1px solid var(--card-border);
+      font-size: 0.78rem;
+      color: #64748b;
+      line-height: 1.6;
+    }
+
+    .download-footer a {
+      color: #38bdf8;
+      text-decoration: none;
+    }
+
+    .download-footer a:hover {
+      text-decoration: underline;
+    }
+
+    /* Toast */
+    .toast-msg {
+      position: fixed;
+      bottom: 24px;
+      background: #0284c7;
+      color: #ffffff;
+      font-weight: 700;
+      font-size: 0.85rem;
+      padding: 10px 18px;
+      border-radius: 999px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      display: none;
+      align-items: center;
+      gap: 8px;
+      animation: slideUp 0.25s ease;
+    }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Government Header Bar -->
+  <header class="gov-top-bar">
+    <div class="gov-brand">
+      <div class="gov-emblem">
+        <i class="fa-solid fa-building-columns"></i>
+      </div>
+      <div class="gov-titles">
+        <h2>Village Council Phonebook</h2>
+        <p>Citizen Portal</p>
+      </div>
+    </div>
+    <div class="lang-switcher">
+      <button type="button" class="lang-btn active" id="btnLangEn" onclick="switchLang('en')">EN</button>
+      <button type="button" class="lang-btn" id="btnLangMiz" onclick="switchLang('miz')">MIZ</button>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="download-container">
+
+    <!-- Hero Download Card -->
+    <section class="hero-card">
+      <div class="app-icon-wrap">
+        <img src="icon-192.png" alt="Mizoram VC App Icon" class="app-icon">
+        <span class="badge-verified">
+          <i class="fa-solid fa-shield-check"></i> Official
+        </span>
+      </div>
+
+      <h1 class="app-title" id="txtAppTitle">Mizoram Village Council Phonebook</h1>
+      <p class="app-subtitle" id="txtAppSubtitle">
+        Official citizen directory &amp; helpline application for Village Councils (VC) and Local Councils (LC).
+      </p>
+
+      <div class="meta-pills">
+        <span class="meta-pill"><i class="fa-solid fa-code-commit"></i> v2.0 Official</span>
+        <span class="meta-pill"><i class="fa-solid fa-file-shield"></i> Verified Signature</span>
+        <span class="meta-pill"><i class="fa-solid fa-wifi"></i> 100% Offline Ready</span>
+        <span class="meta-pill"><i class="fa-solid fa-shield-halved"></i> 100% Safe &amp; Ad-Free</span>
+      </div>
+
+      <!-- Main Download Button -->
+      <a href="/downloads/Mizoram_VC_Phonebook.apk" class="btn-download-apk" id="mainDownloadBtn" download>
+        <div class="btn-left">
+          <i class="fa-brands fa-android btn-icon-android"></i>
+          <div>
+            <span class="btn-text-main" id="txtBtnMain">Download Citizen App (APK)</span>
+            <span class="btn-text-sub" id="txtBtnSub">Free Android Application • Works without Internet</span>
+          </div>
+        </div>
+        <span class="btn-size-tag">5.67 MB</span>
+      </a>
+
+      <!-- Alternative Web Access -->
+      <div class="web-alt-box">
+        <span id="txtWebAlt">Prefer using without installation?</span>
+        <a href="/phonebook/" class="btn-open-web" id="txtWebBtn">
+          <i class="fa-solid fa-globe"></i> Open Web Phonebook
+        </a>
+      </div>
+    </section>
+
+    <!-- 3-Step Simple Installation Guide -->
+    <section class="section-card">
+      <div class="section-header">
+        <i class="fa-solid fa-circle-question"></i>
+        <h3 id="txtStepsHeader">How to Install on Your Android Phone</h3>
+      </div>
+
+      <div class="steps-list">
+        <div class="step-item">
+          <div class="step-num">1</div>
+          <div class="step-content">
+            <h4 id="txtStep1Title">Tap "Download Citizen App"</h4>
+            <p id="txtStep1Desc">Tap the download button above to download <span class="highlight">Mizoram_VC_Phonebook.apk</span> directly to your phone.</p>
+          </div>
+        </div>
+
+        <div class="step-item">
+          <div class="step-num">2</div>
+          <div class="step-content">
+            <h4 id="txtStep2Title">Allow Installation if Prompted</h4>
+            <p id="txtStep2Desc">When prompted <em>"File might be harmful"</em>, tap <span class="highlight">Download anyway</span>. If asked to install unknown apps, tap <span class="highlight">Settings ➔ Allow from this source</span>.</p>
+          </div>
+        </div>
+
+        <div class="step-item">
+          <div class="step-num">3</div>
+          <div class="step-content">
+            <h4 id="txtStep3Title">Install &amp; Open</h4>
+            <p id="txtStep3Desc">Tap <span class="highlight">Install</span> and open the app. The phonebook will work instantly with full offline search, calling, and WhatsApp!</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Key App Features -->
+    <section class="section-card">
+      <div class="section-header">
+        <i class="fa-solid fa-star"></i>
+        <h3 id="txtFeaturesHeader">Key App Features</h3>
+      </div>
+
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon-box"><i class="fa-solid fa-plane"></i></div>
+          <div class="feature-text">
+            <h4 id="txtFeat1Title">100% Offline Access</h4>
+            <p id="txtFeat1Desc">Find emergency helplines and council contacts even with zero mobile data.</p>
+          </div>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon-box"><i class="fa-solid fa-phone-volume"></i></div>
+          <div class="feature-text">
+            <h4 id="txtFeat2Title">Direct Call &amp; WhatsApp</h4>
+            <p id="txtFeat2Desc">One-tap telephone calls and WhatsApp messaging with polite Mizo greetings.</p>
+          </div>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon-box"><i class="fa-solid fa-map-location-dot"></i></div>
+          <div class="feature-text">
+            <h4 id="txtFeat3Title">All 11 Districts</h4>
+            <p id="txtFeat3Desc">Kolasib, Aizawl, Lunglei, Champhai, Mamit, Serchhip and state-wide councils.</p>
+          </div>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon-box"><i class="fa-solid fa-bullhorn"></i></div>
+          <div class="feature-text">
+            <h4 id="txtFeat4Title">District Broadcasts</h4>
+            <p id="txtFeat4Desc">Receive verified public notices, emergency advisories, and administration alerts.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Share With Others & QR Code -->
+    <section class="section-card">
+      <div class="section-header">
+        <i class="fa-solid fa-share-nodes"></i>
+        <h3 id="txtShareHeader">Share with Friends &amp; Family</h3>
+      </div>
+
+      <p style="font-size: 0.82rem; color: #94a3b8; line-height: 1.5;" id="txtShareDesc">
+        Help other citizens access village council and emergency contacts by sharing this download link:
+      </p>
+
+      <div class="share-row">
+        <a href="#" id="btnShareWhatsApp" class="btn-share-wa" target="_blank">
+          <i class="fa-brands fa-whatsapp" style="font-size: 1.15rem;"></i>
+          <span id="txtShareWaBtn">Share on WhatsApp</span>
+        </a>
+        <button type="button" class="btn-copy-link" onclick="copyDownloadLink()">
+          <i class="fa-solid fa-copy"></i>
+          <span id="txtCopyBtn">Copy Link</span>
+        </button>
+      </div>
+
+      <!-- Scan to download QR Code for PC / Flyers -->
+      <div class="qr-container">
+        <div id="qrcodeBox"></div>
+        <div class="qr-text">
+          <strong id="txtQrTitle">Scan with Phone Camera</strong>
+          <span id="txtQrDesc">Point your mobile camera at this QR code to open the download page directly on your phone.</span>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="download-footer">
+    <p><strong>District Administration, Kolasib</strong></p>
+    <p>Official Citizen Initiative &bull; Signed Keystore: Kolasib Administration</p>
+    <p style="margin-top: 8px;">
+      <a href="/phonebook/">Web App</a> &bull;
+      <a href="/admin/">Administrative Portal</a> &bull;
+      <a href="/api/health">System Status</a>
+    </p>
+  </footer>
+
+  <!-- Toast Alert -->
+  <div id="toastAlert" class="toast-msg">
+    <i class="fa-solid fa-circle-check"></i>
+    <span id="toastMsg">Link copied to clipboard!</span>
+  </div>
+
+  <script>
+    // Bilingual Localization Dictionary (English & Mizo)
+    const i18n = {
+      en: {
+        appTitle: "Mizoram Village Council Phonebook",
+        appSubtitle: "Official citizen directory & helpline application for Village Councils (VC) and Local Councils (LC).",
+        btnMain: "Download Citizen App (APK)",
+        btnSub: "Free Android Application • Works without Internet",
+        webAlt: "Prefer using without installation?",
+        webBtn: "Open Web Phonebook",
+        stepsHeader: "How to Install on Your Android Phone",
+        step1Title: "Tap \"Download Citizen App\"",
+        step1Desc: "Tap the download button above to download Mizoram_VC_Phonebook.apk directly to your phone.",
+        step2Title: "Allow Installation if Prompted",
+        step2Desc: "When prompted \"File might be harmful\", tap Download anyway. If asked to install unknown apps, tap Settings ➔ Allow from this source.",
+        step3Title: "Install & Open",
+        step3Desc: "Tap Install and open the app. The phonebook will work instantly with full offline search, calling, and WhatsApp!",
+        featuresHeader: "Key App Features",
+        feat1Title: "100% Offline Access",
+        feat1Desc: "Find emergency helplines and council contacts even with zero mobile data.",
+        feat2Title: "Direct Call & WhatsApp",
+        feat2Desc: "One-tap telephone calls and WhatsApp messaging with polite Mizo greetings.",
+        feat3Title: "All 11 Districts",
+        feat3Desc: "Kolasib, Aizawl, Lunglei, Champhai, Mamit, Serchhip and state-wide councils.",
+        feat4Title: "District Broadcasts",
+        feat4Desc: "Receive verified public notices, emergency advisories, and administration alerts.",
+        shareHeader: "Share with Friends & Family",
+        shareDesc: "Help other citizens access village council and emergency contacts by sharing this download link:",
+        shareWaBtn: "Share on WhatsApp",
+        copyBtn: "Copy Link",
+        qrTitle: "Scan with Phone Camera",
+        qrDesc: "Point your mobile camera at this QR code to open the download page directly on your phone.",
+        copied: "Download link copied to clipboard!"
+      },
+      miz: {
+        appTitle: "Mizoram Village Council Phonebook",
+        appSubtitle: "Mizoram pum huap Village Council (VC) leh Local Council (LC) te biak pawhna Official Citizen App a ni e.",
+        btnMain: "Citizen App Download Rawh (APK)",
+        btnSub: "A thlawnin Android App • Internet awm lovin a hman theih",
+        webAlt: "Install kher lovin hman i duh em?",
+        webBtn: "Web Phonebook Hawng Rawh",
+        stepsHeader: "I Phone-a Install Dan Awlsam",
+        step1Title: "\"Download Citizen App\" hmet rawh",
+        step1Desc: "A chunga download button hmet la, Mizoram_VC_Phonebook.apk hi i phone-ah a download ang.",
+        step2Title: "Phalna dil che chuan \"Allow\" hmet rawh",
+        step2Desc: "\"File might be harmful\" a tih chuan \"Download anyway\" hmet la, unknown apps install phalna a dil che chuan Settings ➔ \"Allow from this source\" on rawh.",
+        step3Title: "Install la, Hawng Rawh",
+        step3Desc: "Install hmet la, hawng rawh. Internet awm loh pawn VC hruaitute leh emergency phone number te i en thei nghal ang!",
+        featuresHeader: "App Hlutna & Hman Tangkaina",
+        feat1Title: "Internet Lova Hman Theih",
+        feat1Desc: "Data / internet awm miah loh pawhin emergency helpline leh VC number zawng zawng a en theih.",
+        feat2Title: "Call & WhatsApp Awlsam",
+        feat2Desc: "Hmet tawp la, call emaw WhatsApp-in zahawm takin i be nghal thei.",
+        feat3Title: "District 11 Pum Huap",
+        feat3Desc: "Kolasib, Aizawl, Lunglei, Champhai, Mamit, Serchhip leh Mizoram district zawng zawng a awm.",
+        feat4Title: "Sawrkar Hriattirna Thuchhuah",
+        feat4Desc: "District Administration thuchhuah leh hriattirna pawimawh tak te a hriat nghal zung zung theih.",
+        shareHeader: "Chhungte & Thiante Hnenah Hrilh Rawh",
+        shareDesc: "Citizen dangte tan a tangkai em em avangin he download link hi WhatsApp-ah thawn darh ve rawh le:",
+        shareWaBtn: "WhatsApp-ah Thawn Rawh",
+        copyBtn: "Link Copy Rawh",
+        qrTitle: "Camera-in QR Code Scan Rawh",
+        qrDesc: "I phone camera-in he QR code hi scan la, download page hi phone-ah a inhawng nghal ang.",
+        copied: "Download link copy a ni ta!"
+      }
+    };
+
+    let currentLang = 'en';
+
+    function switchLang(lang) {
+      currentLang = lang;
+      document.getElementById('btnLangEn').classList.toggle('active', lang === 'en');
+      document.getElementById('btnLangMiz').classList.toggle('active', lang === 'miz');
+
+      const t = i18n[lang];
+      document.getElementById('txtAppTitle').textContent = t.appTitle;
+      document.getElementById('txtAppSubtitle').textContent = t.appSubtitle;
+      document.getElementById('txtBtnMain').textContent = t.btnMain;
+      document.getElementById('txtBtnSub').textContent = t.btnSub;
+      document.getElementById('txtWebAlt').textContent = t.webAlt;
+      document.getElementById('txtWebBtn').innerHTML = `<i class="fa-solid fa-globe"></i> ${t.webBtn}`;
+      document.getElementById('txtStepsHeader').textContent = t.stepsHeader;
+      document.getElementById('txtStep1Title').textContent = t.step1Title;
+      document.getElementById('txtStep1Desc').innerHTML = t.step1Desc.replace('Mizoram_VC_Phonebook.apk', '<span class="highlight">Mizoram_VC_Phonebook.apk</span>');
+      document.getElementById('txtStep2Title').textContent = t.step2Title;
+      document.getElementById('txtStep2Desc').textContent = t.step2Desc;
+      document.getElementById('txtStep3Title').textContent = t.step3Title;
+      document.getElementById('txtStep3Desc').textContent = t.step3Desc;
+      document.getElementById('txtFeaturesHeader').textContent = t.featuresHeader;
+      document.getElementById('txtFeat1Title').textContent = t.feat1Title;
+      document.getElementById('txtFeat1Desc').textContent = t.feat1Desc;
+      document.getElementById('txtFeat2Title').textContent = t.feat2Title;
+      document.getElementById('txtFeat2Desc').textContent = t.feat2Desc;
+      document.getElementById('txtFeat3Title').textContent = t.feat3Title;
+      document.getElementById('txtFeat3Desc').textContent = t.feat3Desc;
+      document.getElementById('txtFeat4Title').textContent = t.feat4Title;
+      document.getElementById('txtFeat4Desc').textContent = t.feat4Desc;
+      document.getElementById('txtShareHeader').textContent = t.shareHeader;
+      document.getElementById('txtShareDesc').textContent = t.shareDesc;
+      document.getElementById('txtShareWaBtn').textContent = t.shareWaBtn;
+      document.getElementById('txtCopyBtn').textContent = t.copyBtn;
+      document.getElementById('txtQrTitle').textContent = t.qrTitle;
+      document.getElementById('txtQrDesc').textContent = t.qrDesc;
+
+      updateWhatsAppShareLink();
+    }
+
+    function updateWhatsAppShareLink() {
+      const pageUrl = window.location.href;
+      const text = currentLang === 'miz' 
+        ? `Mizoram Village Council & Local Council Phonebook App download link a ni e. VC hruaitute leh emergency number zawng zawng offline-in a en theih vek: ${pageUrl}`
+        : `Official Mizoram Village Council & Local Council Phonebook App download link. Access council leaders and emergency helplines offline: ${pageUrl}`;
+      document.getElementById('btnShareWhatsApp').href = `https://wa.me/?text=${encodeURIComponent(text)}`;
+    }
+
+    function copyDownloadLink() {
+      const pageUrl = window.location.href;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(pageUrl).then(() => {
+          showToast(i18n[currentLang].copied);
+        }).catch(() => {
+          fallbackCopy(pageUrl);
+        });
+      } else {
+        fallbackCopy(pageUrl);
+      }
+    }
+
+    function fallbackCopy(text) {
+      const temp = document.createElement('input');
+      temp.value = text;
+      document.body.appendChild(temp);
+      temp.select();
+      document.execCommand('copy');
+      document.body.removeChild(temp);
+      showToast(i18n[currentLang].copied);
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toastAlert');
+      const text = document.getElementById('toastMsg');
+      if (!toast || !text) return;
+      text.textContent = msg;
+      toast.style.display = 'inline-flex';
+      setTimeout(() => {
+        toast.style.display = 'none';
+      }, 3000);
+    }
+
+    // Initialize QR Code & WhatsApp Link
+    window.addEventListener('DOMContentLoaded', () => {
+      updateWhatsAppShareLink();
+
+      // Render crisp QR Code pointing to this download link
+      const qrBox = document.getElementById('qrcodeBox');
+      if (qrBox && typeof QRCode !== 'undefined') {
+        new QRCode(qrBox, {
+          text: window.location.href,
+          width: 96,
+          height: 96,
+          colorDark: "#0f172a",
+          colorLight: "#ffffff",
+          correctLevel: QRCode.CorrectLevel.M
+        });
+      }
+    });
+  </script>
+</body>
+</html>

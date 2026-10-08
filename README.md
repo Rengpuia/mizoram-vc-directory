@@ -7,6 +7,7 @@ Complete deployment bundle for the **Mizoram State & Kolasib District Village Co
 ## 📦 Package Contents
 
 * `backend/`: Node.js Express sync server, REST API, SSE push engine, and database store.
+* `download/`: Citizen App Download Landing Page (`/download/`, `/download-app`, `/apk`) with QR code, direct APK download, and WhatsApp share buttons.
 * `kolasib-vc-phonebook/www/`: Citizen Phonebook Web App (with responsive mobile UI, in-app dialogs, offline cache, and Mizo WhatsApp messaging).
 * `kolasib-vc-admin/www/`: District Admin Web Portal (PIN authentication, live editor, audit trail, report resolution).
 * `simulator/`: Side-by-side Dual Phone Live Simulator interface.
@@ -47,11 +48,23 @@ Complete deployment bundle for the **Mizoram State & Kolasib District Village Co
 
 ---
 
-### Option 2: Render.com / Cloud Deployment
+### Option 2: Render.com / Cloud Deployment (Anti-Sleep & Permanent Persistence)
 
 * **Build Command**: `npm install`
 * **Start Command**: `node backend/server.js`
 * **Port**: `3000` (or dynamic `$PORT`)
+
+#### 🛡️ How to Keep Database Permanently Saved Across Sleeps & Reboots:
+Render's free tier spins down containers after 15 minutes of inactivity and resets ephemeral disks. To permanently protect your data:
+1. **Prevent Sleep (Automated Keep-Alive)**:
+   * In Render Dashboard ➔ Your Web Service ➔ **Environment**:
+   * Add: `APP_URL` = `https://your-service-name.onrender.com`
+   * The server will automatically ping its own `/api/health` endpoint every 10 minutes to stay awake 24/7!
+2. **Permanent Cloud Database (Zero Cost)**:
+   * **GitHub Gist (Easiest)**: Add `GITHUB_TOKEN` and `GIST_ID` (from gist.github.com) to Render Environment. All contacts, offices, and updates sync permanently to your private Gist.
+   * **MongoDB Atlas (Free 512MB)**: Add `MONGODB_URI` = `mongodb+srv://user:pass@cluster.mongodb.net/mizoram_vc` to Render Environment.
+3. **Admin Auto-Backup & 1-Click Disaster Recovery**:
+   * The Admin Portal automatically stores local snapshots in the browser. If the server ever resets, a 1-click restore banner appears allowing instant restoration of all data to the server.
 
 ---
 

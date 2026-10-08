@@ -50,11 +50,36 @@
             </div>
           </div>
           <div class="header-actions">
+            <a href="/download/" target="_blank" class="btn-sheets-hub" style="background:rgba(2,132,199,0.15); border-color:#0284c7; color:#38bdf8; text-decoration:none;" title="Citizen App Download Page">
+              <i class="fa-brands fa-android"></i> <span>Citizen App</span>
+            </a>
+            <button class="btn-sheets-hub" onclick="openStorageModal()" style="background:rgba(16,185,129,0.12); border-color:#10b981; color:#34d399;" title="Cloud Persistence, Auto-Backup &amp; Anti-Sleep">
+              <i class="fa-solid fa-cloud-arrow-up"></i> <span>Cloud Backup</span>
+            </button>
             <button class="btn-sheets-hub" onclick="openSheetsModal('contacts')" title="Google Sheets Import &amp; Export Hub">
-              <i class="fa-solid fa-file-excel"></i> <span>Google Sheets</span>
+              <i class="fa-solid fa-file-excel"></i> <span>Sheets</span>
             </button>
             <button class="btn-logout" onclick="handleLogout()" title="Lock Portal">
               <i class="fa-solid fa-arrow-right-from-bracket"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Server Reset & Disaster Recovery Notification Banner -->
+        <div id="serverResetAlertBanner" class="server-reset-banner" style="display:none;">
+          <div class="reset-banner-content">
+            <i class="fa-solid fa-triangle-exclamation reset-icon"></i>
+            <div class="reset-text">
+              <strong>Server Restart Detected:</strong>
+              <span id="resetBannerMsg">Local backup available on this device with newer data.</span>
+            </div>
+          </div>
+          <div class="reset-actions">
+            <button type="button" class="btn-restore-quick" onclick="restoreFromLocalSnapshot()">
+              <i class="fa-solid fa-cloud-arrow-up"></i> Restore to Server
+            </button>
+            <button type="button" class="btn-dismiss-quick" onclick="dismissResetBanner()">
+              <i class="fa-solid fa-xmark"></i>
             </button>
           </div>
         </div>
@@ -273,6 +298,35 @@
                 <i class="fa-solid fa-cloud-arrow-up"></i> Save &amp; Push Developer Info
               </button>
             </form>
+          <!-- Citizen App Download & Distribution Link Card -->
+          <div class="card-section" style="margin-top: 14px; border-left: 4px solid #0284c7; background: linear-gradient(135deg, rgba(2, 132, 199, 0.08), rgba(16, 185, 129, 0.05));">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+              <div>
+                <h3 style="margin-bottom:4px; display:flex; align-items:center; gap:8px;">
+                  <i class="fa-brands fa-android" style="color:#10b981;"></i> Citizen App Download Page
+                </h3>
+                <p style="color:#94a3b8; font-size:0.83rem; margin:0;">
+                  Official public download page with direct APK download, QR code, and WhatsApp share buttons.
+                </p>
+              </div>
+              <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                <a href="/download/" target="_blank" class="btn btn-secondary" style="background:#0284c7; color:#fff; border:none; text-decoration:none; display:inline-flex; align-items:center; gap:6px;">
+                  <i class="fa-solid fa-arrow-up-right-from-square"></i> Open Page
+                </a>
+                <button type="button" class="btn btn-secondary" onclick="copyAdminCitizenDownloadLink()" style="background:rgba(255,255,255,0.08); color:#f8fafc; border:1px solid rgba(255,255,255,0.15);">
+                  <i class="fa-solid fa-copy"></i> Copy Link
+                </button>
+                <button type="button" class="btn btn-secondary" onclick="shareAdminCitizenDownloadLinkWhatsApp()" style="background:#25d366; color:#fff; border:none;">
+                  <i class="fa-brands fa-whatsapp"></i> WhatsApp
+                </button>
+              </div>
+            </div>
+            <div style="margin-top:12px; padding:10px 14px; background:rgba(15,23,42,0.6); border-radius:8px; border:1px solid rgba(255,255,255,0.06); font-family:monospace; font-size:0.82rem; color:#38bdf8; display:flex; align-items:center; justify-content:space-between; word-break:break-all;">
+              <span id="citizenDownloadUrlDisplay">https://[your-domain]/download/</span>
+              <a href="/downloads/Mizoram_VC_Phonebook.apk" download style="color:#a7f3d0; text-decoration:none; font-size:0.75rem; white-space:nowrap; margin-left:12px;">
+                <i class="fa-solid fa-download"></i> Direct APK (5.67 MB)
+              </a>
+            </div>
           </div>
 
           <div class="card-section" style="margin-top: 14px; border-left: 4px solid #10b981;">
@@ -361,6 +415,22 @@
             <div class="search-input-wrap">
               <i class="fa-solid fa-magnifying-glass"></i>
               <input type="text" id="adminOfficeSearch" placeholder="Search offices, departments or staff...">
+            </div>
+          </div>
+
+          <!-- Admin Offices Toolbar -->
+          <div class="admin-offices-toolbar" id="adminOfficesToolbar" style="display: none;">
+            <div class="admin-offices-count">
+              <i class="fa-solid fa-building-columns"></i>
+              <span id="adminOfficesCountLabel">0 Offices</span>
+            </div>
+            <div style="display:flex; gap:8px;">
+              <button type="button" class="btn btn-sm btn-secondary" onclick="toggleAllAdminOfficeStaff(true)" title="Expand all office staff lists">
+                <i class="fa-solid fa-angles-down"></i> Expand All
+              </button>
+              <button type="button" class="btn btn-sm btn-secondary" onclick="toggleAllAdminOfficeStaff(false)" title="Collapse all office staff lists">
+                <i class="fa-solid fa-angles-up"></i> Collapse All
+              </button>
             </div>
           </div>
 
@@ -1359,6 +1429,63 @@
           <button type="button" class="btn btn-primary" id="btnAdminPromptOk" onclick="submitAdminPrompt()">
             Submit
           </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cloud Storage, Persistence & Disaster Recovery Modal -->
+    <div id="storageModal" class="modal" style="display: none;">
+      <div class="modal-content" style="max-width: 650px; background: #0f172a; border: 1px solid #334155;">
+        <div class="modal-header" style="background: #1e293b; border-bottom: 1px solid #334155;">
+          <h3><i class="fa-solid fa-cloud-arrow-up" style="color: #10b981;"></i> Cloud Persistence &amp; Auto-Backup</h3>
+          <button type="button" class="modal-close" onclick="closeStorageModal()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="modal-body" style="padding: 20px;">
+          <!-- Storage Status Card -->
+          <div class="storage-status-card" id="storageStatusBox" style="background: rgba(255,255,255,0.03); border: 1px solid #334155; border-radius: 10px; padding: 14px; margin-bottom: 18px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+              <span style="font-size:0.88rem; font-weight:700; color:#f8fafc;">Server Persistence Status</span>
+              <span id="storageProviderBadge" class="storage-badge" style="background:#334155; color:#cbd5e1; padding:3px 10px; border-radius:999px; font-size:0.75rem; font-weight:700;">Checking...</span>
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; font-size:0.82rem; color:#94a3b8;">
+              <div>Anti-Sleep Keep-Alive: <strong id="storageKeepAliveText" style="color:#38bdf8;">Checking...</strong></div>
+              <div>Last Saved: <strong id="storageLastSavedText" style="color:#cbd5e1;">-</strong></div>
+              <div>Total Contacts: <strong id="storageContactsCount" style="color:#ffffff;">0</strong></div>
+              <div>Total Offices: <strong id="storageOfficesCount" style="color:#ffffff;">0</strong></div>
+            </div>
+          </div>
+
+          <!-- Quick Disaster Recovery Buttons -->
+          <div style="display:flex; flex-direction:column; gap:12px; margin-bottom:20px;">
+            <div style="display:flex; gap:10px;">
+              <button type="button" class="btn" style="flex:1; background:#0284c7; color:#ffffff; font-weight:600; padding:10px;" onclick="downloadFullBackup()">
+                <i class="fa-solid fa-download"></i> Download JSON Backup
+              </button>
+              <label class="btn" style="flex:1; background:#0d9488; color:#ffffff; font-weight:600; padding:10px; text-align:center; cursor:pointer; margin:0;">
+                <i class="fa-solid fa-upload"></i> Restore from JSON File
+                <input type="file" id="restoreFileInput" accept=".json" style="display:none;" onchange="handleRestoreFile(event)">
+              </label>
+            </div>
+            <button type="button" class="btn btn-secondary" onclick="restoreFromLocalSnapshot()" style="width:100%; border:1px solid #334155; background:rgba(255,255,255,0.05); color:#cbd5e1;">
+              <i class="fa-solid fa-rotate-left" style="color:#38bdf8;"></i> Restore Latest Device Snapshot to Server
+            </button>
+          </div>
+
+          <!-- Free Tier Guide Accordion -->
+          <div style="background: rgba(15, 23, 42, 0.8); border: 1px solid #334155; border-radius: 8px; padding: 14px; font-size: 0.82rem; line-height: 1.5; color: #cbd5e1;">
+            <h4 style="margin: 0 0 8px 0; color: #38bdf8; font-size: 0.88rem; display: flex; align-items: center; gap: 6px;">
+              <i class="fa-solid fa-circle-info"></i> How to Keep Updates Saved on Render (Free Tier)
+            </h4>
+            <p style="margin: 0 0 8px 0;">On Render Free Tier, containers sleep after 15 minutes of inactivity and reset temporary disks. Use one of these 100% free solutions to keep your changes forever:</p>
+            <ul style="padding-left: 20px; margin: 0; display: flex; flex-direction: column; gap: 6px;">
+              <li><strong>Solution 1 (Anti-Sleep Keep-Alive - 30 seconds):</strong> In your Render Web Service, go to <em>Environment</em> and set <code>APP_URL</code> to your Render app URL (e.g. <code>https://your-service.onrender.com</code>). The server will automatically ping itself every 10 minutes so Render never sleeps!</li>
+              <li><strong>Solution 2 (GitHub Gist - Free Cloud DB):</strong> Create a secret Gist at <code>gist.github.com</code>, create a GitHub token at <code>github.com/settings/tokens</code>, and add <code>GITHUB_TOKEN</code> and <code>GIST_ID</code> in Render's Environment. Every edit is permanently synced!</li>
+              <li><strong>Solution 3 (MongoDB Atlas - Free 512MB):</strong> Create a free database at <code>mongodb.com</code> and add <code>MONGODB_URI</code> to Render Environment.</li>
+            </ul>
+          </div>
+        </div>
+        <div class="modal-footer" style="background: #1e293b; border-top: 1px solid #334155;">
+          <button type="button" class="btn btn-secondary" onclick="closeStorageModal()">Close</button>
         </div>
       </div>
     </div>

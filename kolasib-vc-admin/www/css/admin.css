@@ -1004,42 +1004,186 @@ body {
   border-left: 3px solid #0284c7;
 }
 
-.admin-office-staff-section {
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  padding-top: 10px;
-  margin-top: 8px;
-}
-
-.admin-office-staff-header {
-  font-size: 0.78rem;
-  font-weight: 700;
-  color: #94a3b8;
-  margin-bottom: 8px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.admin-staff-list {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.admin-staff-row {
-  background: rgba(0, 0, 0, 0.25);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: var(--radius-sm);
-  padding: 8px 10px;
+/* -------------------------------------------------------------
+   Admin Offices Toolbar & Quick Controls
+   ------------------------------------------------------------- */
+.admin-offices-toolbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  margin: 10px 0 14px 0;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.admin-offices-count {
+  font-size: 0.84rem;
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.admin-offices-count i {
+  color: #38bdf8;
+}
+
+/* -------------------------------------------------------------
+   Admin Office Staff Collapsible Accordion & Clean Cards
+   ------------------------------------------------------------- */
+.admin-office-staff-section {
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding-top: 10px;
+  margin-top: 10px;
+}
+
+.admin-staff-toggle-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.admin-staff-toggle-btn {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  color: #f8fafc;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.admin-staff-toggle-btn:hover {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(56, 189, 248, 0.3);
+}
+
+.admin-staff-toggle-btn.active {
+  background: rgba(56, 189, 248, 0.08);
+  border-color: rgba(56, 189, 248, 0.4);
+}
+
+.admin-staff-chevron {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.admin-staff-chevron.rotated {
+  transform: rotate(180deg);
+  color: #38bdf8;
+}
+
+/* Admin Staff Collapse Body */
+.admin-staff-collapse-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 10px;
+  animation: fadeInAdminStaff 0.25s ease;
+}
+
+@keyframes fadeInAdminStaff {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Individual Admin Staff Row */
+.admin-staff-row {
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 8px;
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: all 0.2s ease;
+}
+
+.admin-staff-row:hover {
+  border-color: rgba(255, 255, 255, 0.15);
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.admin-staff-row.admin-staff-match {
+  border-color: #38bdf8;
+  background: rgba(56, 189, 248, 0.1);
+}
+
+.admin-staff-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(56, 189, 248, 0.15);
+  color: #38bdf8;
+  font-weight: 700;
+  font-size: 0.82rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 1px solid rgba(56, 189, 248, 0.3);
 }
 
 .admin-staff-info {
+  flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 3px;
+}
+
+.admin-staff-tag {
+  font-size: 0.72rem;
+  color: #38bdf8;
+  background: rgba(2, 132, 199, 0.18);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  padding: 1px 7px;
+  border-radius: 4px;
+}
+
+.admin-staff-chips {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  font-size: 0.8rem;
+  color: #cbd5e1;
+  margin-top: 2px;
+}
+
+.admin-chip-phone i, .admin-chip-alt i, .admin-chip-email i {
+  color: #38bdf8;
+  font-size: 0.75rem;
+  margin-right: 4px;
+}
+
+.admin-staff-actions {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+}
+
+.admin-staff-empty-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 14px;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px dashed rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  color: #94a3b8;
+  font-size: 0.8rem;
+  font-style: italic;
 }
 
 /* -------------------------------------------------------------
@@ -1668,6 +1812,88 @@ body {
   }
 }
 
+/* -------------------------------------------------------------
+ * Server Reset & Disaster Recovery Alert Banner
+ * ------------------------------------------------------------- */
+.server-reset-banner {
+  background: linear-gradient(90deg, #78350f, #92400e);
+  border: 1px solid #f59e0b;
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin: 10px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  color: #fef3c7;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  animation: slideDownBanner 0.3s ease;
+}
 
+@keyframes slideDownBanner {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 
+.reset-banner-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.86rem;
+}
 
+.reset-icon {
+  font-size: 1.15rem;
+  color: #fbbf24;
+}
+
+.reset-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-restore-quick {
+  background: #f59e0b;
+  color: #1e1b4b;
+  border: none;
+  font-weight: 700;
+  font-size: 0.78rem;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.btn-restore-quick:hover {
+  background: #fbbf24;
+}
+
+.btn-dismiss-quick {
+  background: transparent;
+  border: none;
+  color: #fde68a;
+  cursor: pointer;
+  padding: 4px;
+  font-size: 0.9rem;
+}
+
+.storage-badge {
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+.storage-badge.persistent {
+  background: rgba(16, 185, 129, 0.2);
+  color: #34d399;
+  border: 1px solid #10b981;
+}
+.storage-badge.ephemeral {
+  background: rgba(245, 158, 11, 0.2);
+  color: #fbbf24;
+  border: 1px solid #f59e0b;
+}

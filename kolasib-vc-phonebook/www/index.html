@@ -26,6 +26,9 @@
           </div>
         </div>
         <div class="header-actions">
+          <a href="/download/" id="btnDownloadAppHeader" class="btn-notification-history" style="text-decoration:none; display:none; align-items:center; justify-content:center;" title="Download Citizen Android App">
+            <i class="fa-brands fa-android" style="color: #10b981; font-size: 15px;"></i>
+          </a>
           <button class="btn-notification-history" id="btnNotificationHistory" onclick="openNotificationHistoryModal()" title="Notification History">
             <i class="fa-solid fa-bell"></i>
             <span class="notification-badge-count" id="notificationBadgeCount" style="display: none;">0</span>
@@ -161,6 +164,22 @@
           <button class="pill" data-ocat="Agriculture & Rural">Agriculture</button>
         </div>
 
+        <!-- Offices Toolbar & Quick Actions -->
+        <div class="offices-toolbar" id="officesToolbar" style="display: none;">
+          <div class="offices-count-badge">
+            <i class="fa-solid fa-building-columns"></i>
+            <span id="officesCountLabel">0 Offices</span>
+          </div>
+          <div class="offices-toggle-btns">
+            <button type="button" class="btn-toggle-all" onclick="toggleAllOfficeStaff(true)" title="Expand all staff directories">
+              <i class="fa-solid fa-angles-down"></i> Expand All
+            </button>
+            <button type="button" class="btn-toggle-all" onclick="toggleAllOfficeStaff(false)" title="Collapse all staff directories">
+              <i class="fa-solid fa-angles-up"></i> Collapse All
+            </button>
+          </div>
+        </div>
+
         <div id="officesList" class="offices-list" style="padding: 0 14px 20px 14px; display: flex; flex-direction: column; gap: 14px;">
           <!-- Office cards with staff lists dynamically rendered -->
         </div>
@@ -198,6 +217,14 @@
             Enables direct communication between residents, district officials, and village administration.
           </p>
           
+          <div class="info-box" style="background: linear-gradient(135deg, rgba(2, 132, 199, 0.08), rgba(16, 185, 129, 0.08)); border: 1px solid rgba(2, 132, 199, 0.3);">
+            <h4 style="color: #0284c7;"><i class="fa-brands fa-android"></i> Download Official Android App</h4>
+            <p>Install the Android APK for 100% offline access to all Village Councils, Emergency Numbers &amp; Offices without needing active internet connection.</p>
+            <a href="/download/" target="_blank" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 8px; margin-top: 8px; text-decoration: none; padding: 7px 14px; border-radius: 8px; font-size: 0.82rem; font-weight: 600;">
+              <i class="fa-solid fa-download"></i> Get Android APK (5.67 MB)
+            </a>
+          </div>
+
           <div class="info-box">
             <h4><i class="fa-solid fa-bolt"></i> Live Sync Technology</h4>
             <p>Updates made by District Administrators are pushed in real-time to your device. Works seamlessly offline with cached contacts.</p>

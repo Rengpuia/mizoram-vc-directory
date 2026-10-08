@@ -68,6 +68,10 @@ function requestSystemNotificationPermission() {
 
 // Initialize app on DOM ready
 document.addEventListener('DOMContentLoaded', () => {
+  if (!window.AndroidApp) {
+    const btnDl = document.getElementById('btnDownloadAppHeader');
+    if (btnDl) btnDl.style.display = 'inline-flex';
+  }
   initNetworkListeners();
   loadCachedData();
   updateDistrictUI();
@@ -791,6 +795,12 @@ function initSSEPushListener() {
       showLiveToast(`🔄 Directory synced with central server`);
     });
 
+    // 16. Directory restored from backup
+    sse.addEventListener('directory_restored', () => {
+      fetchFreshData();
+      showLiveToast(`🔄 Directory refreshed from cloud restore`);
+    });
+
     sse.onerror = () => {
       updateSyncBadge(false, 'Offline / Reconnecting');
     };
@@ -1054,6 +1064,53 @@ function renderContacts() {
   container.innerHTML = html;
 }
 
+// Global tracking for expanded office staff cards
+if (!state.expandedOffices) {
+  state.expandedOffices = new Set();
+}
+
+function getStaffInitials(name) {
+  if (!name) return 'OF';
+  const clean = name.trim().replace(/^(Pu|Pi|Dr|Er|Shri|Smt)\.?\s+/i, '');
+  const parts = clean.split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return 'OF';
+  if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+
+function toggleOfficeStaff(offId) {
+  if (!state.expandedOffices) state.expandedOffices = new Set();
+  const isExp = state.expandedOffices.has(offId);
+  if (isExp) {
+    state.expandedOffices.delete(offId);
+  } else {
+    state.expandedOffices.add(offId);
+  }
+
+  const bodyEl = document.getElementById(`off-staff-body-${offId}`);
+  const btnEl = document.getElementById(`off-staff-btn-${offId}`);
+  const chevEl = document.getElementById(`off-staff-chev-${offId}`);
+  if (bodyEl && btnEl && chevEl) {
+    const willExpand = !isExp;
+    bodyEl.style.display = willExpand ? 'flex' : 'none';
+    btnEl.setAttribute('aria-expanded', willExpand ? 'true' : 'false');
+    btnEl.classList.toggle('active', willExpand);
+    chevEl.classList.toggle('rotated', willExpand);
+  } else {
+    renderOffices();
+  }
+}
+
+function toggleAllOfficeStaff(expand) {
+  if (!state.expandedOffices) state.expandedOffices = new Set();
+  if (expand) {
+    state.filteredOffices.forEach(o => state.expandedOffices.add(o.id));
+  } else {
+    state.expandedOffices.clear();
+  }
+  renderOffices();
+}
+
 function applyOfficeFilters() {
   let list = [...state.offices];
 
@@ -1074,6 +1131,18 @@ function applyOfficeFilters() {
         (s.phone && s.phone.includes(q))
       ))
     );
+
+    // Auto-expand offices matching staff query
+    if (!state.expandedOffices) state.expandedOffices = new Set();
+    list.forEach(o => {
+      if (o.staff && o.staff.some(s =>
+        (s.name && s.name.toLowerCase().includes(q)) ||
+        (s.designation && s.designation.toLowerCase().includes(q)) ||
+        (s.phone && s.phone.includes(q))
+      )) {
+        state.expandedOffices.add(o.id);
+      }
+    });
   }
 
   state.filteredOffices = list;
@@ -1083,58 +1152,93 @@ function applyOfficeFilters() {
 function renderOffices() {
   const container = document.getElementById('officesList');
   const empty = document.getElementById('noOfficeResults');
+  const toolbar = document.getElementById('officesToolbar');
+  const countLabel = document.getElementById('officesCountLabel');
   if (!container) return;
 
   if (state.filteredOffices.length === 0) {
     container.innerHTML = '';
     if (empty) empty.style.display = 'block';
+    if (toolbar) toolbar.style.display = 'none';
     return;
   }
   if (empty) empty.style.display = 'none';
+  if (toolbar) toolbar.style.display = 'flex';
+  if (countLabel) {
+    countLabel.textContent = `${state.filteredOffices.length} Office${state.filteredOffices.length === 1 ? '' : 's'}`;
+  }
+
+  if (!state.expandedOffices) state.expandedOffices = new Set();
+
+  const query = state.officeSearchQuery ? state.officeSearchQuery.trim().toLowerCase() : '';
 
   const html = state.filteredOffices.map(off => {
     const cleanOfficePhone = off.phone ? off.phone.replace(/[^0-9]/g, '') : '';
     const staffList = off.staff || [];
+    const isExpanded = state.expandedOffices.has(off.id);
 
     const staffHtml = staffList.length === 0 ? `
-      <div style="font-size:0.78rem; color:#94a3b8; padding:8px 0; font-style:italic;">
-        No staff members listed yet.
+      <div class="office-staff-empty-box">
+        <i class="fa-solid fa-user-group"></i>
+        <span>No staff directory entries listed yet for this office.</span>
       </div>
     ` : staffList.map(stf => {
       const cleanStfPhone = stf.phone ? stf.phone.replace(/[^0-9]/g, '') : '';
+      const cleanAltPhone = stf.altPhone ? stf.altPhone.replace(/[^0-9]/g, '') : '';
       const waPhone = cleanStfPhone.startsWith('91') ? cleanStfPhone : `91${cleanStfPhone}`;
       const waMsg = encodeURIComponent(`Chibai Pu/Pi ${stf.name} (${off.name}), khawngaih in ka be thei che angem.`);
+      const initials = getStaffInitials(stf.name);
+
+      const isMatch = query && (
+        (stf.name && stf.name.toLowerCase().includes(query)) ||
+        (stf.designation && stf.designation.toLowerCase().includes(query)) ||
+        (stf.phone && stf.phone.includes(query))
+      );
 
       return `
-        <div class="office-staff-item">
-          <div class="staff-info-col">
-            <div class="staff-name-row">
-              <h5 class="staff-name">${escapeHtml(stf.name)}</h5>
-            </div>
-            <span class="staff-designation">${escapeHtml(stf.designation)}</span>
-            <div class="staff-phone-row">
-              <i class="fa-solid fa-phone" style="font-size:0.75rem; color:#0284c7;"></i>
-              <strong style="color:#0284c7; font-size:0.84rem;">${escapeHtml(formatPhone(stf.phone))}</strong>
-              ${stf.altPhone ? `<span style="font-size:0.75rem; color:#94a3b8;">/ ${escapeHtml(stf.altPhone)}</span>` : ''}
-              ${stf.email ? `<span style="font-size:0.72rem; color:#64748b; margin-left:6px;"><i class="fa-solid fa-envelope"></i> ${escapeHtml(stf.email)}</span>` : ''}
+        <div class="office-staff-item ${isMatch ? 'staff-match-highlight' : ''}">
+          <div class="staff-card-top">
+            <div class="staff-avatar-badge">${initials}</div>
+            <div class="staff-info-col">
+              <div class="staff-name-line">
+                <h5 class="staff-name">${escapeHtml(stf.name)}</h5>
+                ${stf.designation ? `<span class="staff-designation-badge">${escapeHtml(stf.designation)}</span>` : ''}
+              </div>
+              <div class="staff-contact-details">
+                <a href="tel:${cleanStfPhone}" class="staff-phone-item">
+                  <i class="fa-solid fa-phone"></i>
+                  <span>${escapeHtml(formatPhone(stf.phone))}</span>
+                </a>
+                ${stf.altPhone ? `
+                  <a href="tel:${cleanAltPhone}" class="staff-phone-item alt">
+                    <i class="fa-solid fa-phone-volume"></i>
+                    <span>${escapeHtml(stf.altPhone)}</span>
+                  </a>
+                ` : ''}
+                ${stf.email ? `
+                  <a href="mailto:${escapeHtml(stf.email)}" class="staff-email-item">
+                    <i class="fa-solid fa-envelope"></i>
+                    <span>${escapeHtml(stf.email)}</span>
+                  </a>
+                ` : ''}
+              </div>
             </div>
           </div>
 
-          <div class="staff-actions-col">
-            <a href="tel:${cleanStfPhone}" class="btn-staff-call" title="Call directly">
+          <div class="staff-actions-row">
+            <a href="tel:${cleanStfPhone}" class="btn-staff-action btn-staff-call" title="Call directly">
               <i class="fa-solid fa-phone"></i> Call
             </a>
-            <a href="https://wa.me/${waPhone}?text=${waMsg}" target="_blank" class="btn-staff-wa" title="WhatsApp Message">
-              <i class="fa-brands fa-whatsapp"></i>
+            <a href="https://wa.me/${waPhone}?text=${waMsg}" target="_blank" class="btn-staff-action btn-staff-wa" title="WhatsApp Message">
+              <i class="fa-brands fa-whatsapp"></i> WhatsApp
             </a>
-            <button class="btn-staff-copy" onclick="copyContact('${escapeHtml(stf.name)}', '${cleanStfPhone}')" title="Copy Number">
+            <button type="button" class="btn-staff-action btn-staff-copy" onclick="copyContact('${escapeHtml(stf.name)}', '${cleanStfPhone}')" title="Copy Number">
               <i class="fa-solid fa-copy"></i>
             </button>
+            <button type="button" class="btn-staff-action btn-staff-report" onclick="openOfficeStaffReportModal('${off.id}', '${escapeHtml(off.name)}', '${stf.id}', '${escapeHtml(stf.name)}', '${escapeHtml(stf.designation)}', '${escapeHtml(stf.phone)}')" title="Report incorrect info / change number">
+              <i class="fa-solid fa-triangle-exclamation"></i>
+            </button>
           </div>
-
-          <button class="btn-report-link staff-report-btn" onclick="openOfficeStaffReportModal('${off.id}', '${escapeHtml(off.name)}', '${stf.id}', '${escapeHtml(stf.name)}', '${escapeHtml(stf.designation)}', '${escapeHtml(stf.phone)}')">
-            <i class="fa-solid fa-triangle-exclamation"></i> Report incorrect info / changed number
-          </button>
         </div>
       `;
     }).join('');
@@ -1145,6 +1249,7 @@ function renderOffices() {
           <div style="flex:1;">
             <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-bottom:4px;">
               <span class="office-dept-badge">${escapeHtml(off.department || off.category || 'Government')}</span>
+              ${off.district ? `<span class="office-dept-badge" style="background:#f1f5f9; color:#475569;"><i class="fa-solid fa-location-dot"></i> ${escapeHtml(off.district)}</span>` : ''}
             </div>
             <h3 class="office-title">${escapeHtml(off.name)}</h3>
             ${off.address ? `<p class="office-addr"><i class="fa-solid fa-location-dot"></i> ${escapeHtml(off.address)}</p>` : ''}
@@ -1164,12 +1269,27 @@ function renderOffices() {
           ` : ''}
         </div>
 
-        <!-- Office Staff Contact List -->
-        <div class="office-staff-section">
-          <div class="office-staff-header">
-            <span><i class="fa-solid fa-users" style="color:#0284c7;"></i> Office Staff Contact List (${staffList.length})</span>
-          </div>
-          <div class="office-staff-list">
+        <!-- Office Staff Collapsible Accordion -->
+        <div class="office-staff-section" id="off-staff-sec-${off.id}">
+          <button type="button" 
+                  id="off-staff-btn-${off.id}" 
+                  class="office-staff-toggle-bar ${isExpanded ? 'active' : ''}" 
+                  onclick="toggleOfficeStaff('${off.id}')"
+                  aria-expanded="${isExpanded ? 'true' : 'false'}">
+            <div class="toggle-bar-left">
+              <span class="toggle-bar-icon"><i class="fa-solid fa-users"></i></span>
+              <div class="toggle-bar-text">
+                <span class="toggle-title">Office Staff &amp; Officers</span>
+                <span class="toggle-subtitle">${staffList.length === 0 ? 'No staff directory listed' : `${staffList.length} officer${staffList.length === 1 ? '' : 's'} / staff registered`}</span>
+              </div>
+            </div>
+            <div class="toggle-bar-right">
+              <span class="staff-count-tag">${staffList.length}</span>
+              <i id="off-staff-chev-${off.id}" class="fa-solid fa-chevron-down staff-chevron-icon ${isExpanded ? 'rotated' : ''}"></i>
+            </div>
+          </button>
+
+          <div id="off-staff-body-${off.id}" class="office-staff-collapse-body" style="${isExpanded ? 'display:flex;' : 'display:none;'}">
             ${staffHtml}
           </div>
         </div>

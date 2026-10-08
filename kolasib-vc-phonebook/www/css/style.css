@@ -1302,114 +1302,371 @@ body {
   font-weight: 500;
 }
 
-.office-staff-section {
-  border-top: 1px solid #f1f5f9;
-  padding-top: 10px;
+/* -------------------------------------------------------------
+ * Offices Toolbar & Quick Controls
+ * ------------------------------------------------------------- */
+.offices-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 14px 10px 14px;
+  gap: 10px;
 }
 
-.office-staff-header {
+.offices-count-badge {
   font-size: 0.82rem;
   font-weight: 700;
-  color: #334155;
-  margin-bottom: 8px;
+  color: #475569;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.offices-count-badge i {
+  color: #0284c7;
+}
+
+.offices-toggle-btns {
   display: flex;
   align-items: center;
   gap: 6px;
 }
 
-.office-staff-list {
+.btn-toggle-all {
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  color: #334155;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.2s ease;
+}
+
+.btn-toggle-all:hover, .btn-toggle-all:active {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+/* -------------------------------------------------------------
+ * Office Staff Collapsible Accordion & Clean Cards
+ * ------------------------------------------------------------- */
+.office-staff-section {
+  border-top: 1px solid #f1f5f9;
+  padding-top: 8px;
+  margin-top: 2px;
+}
+
+.office-staff-toggle-bar {
+  width: 100%;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 8px 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.office-staff-toggle-bar:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+.office-staff-toggle-bar.active {
+  background: #f0f9ff;
+  border-color: #bae6fd;
+}
+
+.toggle-bar-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.toggle-bar-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: #e0f2fe;
+  color: #0284c7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+
+.toggle-bar-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.toggle-title {
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: #1e293b;
+  line-height: 1.2;
+}
+
+.toggle-subtitle {
+  font-size: 0.72rem;
+  color: #64748b;
+  margin-top: 1px;
+}
+
+.toggle-bar-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.staff-count-tag {
+  background: #e2e8f0;
+  color: #334155;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+  transition: all 0.2s ease;
+}
+
+.office-staff-toggle-bar.active .staff-count-tag {
+  background: #0284c7;
+  color: #ffffff;
+}
+
+.staff-chevron-icon {
+  font-size: 0.78rem;
+  color: #64748b;
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.staff-chevron-icon.rotated {
+  transform: rotate(180deg);
+  color: #0284c7;
+}
+
+/* Collapsible Staff Body */
+.office-staff-collapse-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 10px;
+  animation: fadeInStaff 0.25s ease;
+}
+
+@keyframes fadeInStaff {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Individual Staff Card */
+.office-staff-item {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 10px 12px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.03);
   display: flex;
   flex-direction: column;
   gap: 8px;
+  transition: all 0.2s ease;
 }
 
-.office-staff-item {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: var(--radius-sm);
-  padding: 10px;
+.office-staff-item:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.06);
+}
+
+.office-staff-item.staff-match-highlight {
+  border-color: #0284c7;
+  background: #f0f9ff;
+  box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.15);
+}
+
+/* Staff Top Row */
+.staff-card-top {
   display: flex;
-  flex-direction: column;
-  gap: 6px;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.staff-avatar-badge {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #e0f2fe, #bae6fd);
+  color: #0369a1;
+  font-weight: 700;
+  font-size: 0.84rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
 }
 
 .staff-info-col {
+  flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 3px;
+}
+
+.staff-name-line {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
 }
 
 .staff-name {
   font-size: 0.92rem;
   font-weight: 700;
   color: #0f172a;
+  margin: 0;
+  line-height: 1.25;
 }
 
-.staff-designation {
-  font-size: 0.78rem;
-  color: #0284c7;
+.staff-designation-badge {
+  font-size: 0.72rem;
   font-weight: 600;
+  color: #0284c7;
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  padding: 1px 7px;
+  border-radius: 999px;
+  display: inline-block;
 }
 
-.staff-phone-row {
+/* Contact Details Pills */
+.staff-contact-details {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 6px 10px;
   margin-top: 2px;
 }
 
-.staff-actions-col {
-  display: grid;
-  grid-template-columns: 1fr 38px 38px;
+.staff-phone-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.84rem;
+  color: #0284c7;
+  text-decoration: none;
+}
+
+.staff-phone-item.alt {
+  color: #64748b;
+  font-size: 0.78rem;
+}
+
+.staff-email-item {
+  color: #64748b;
+  font-size: 0.75rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Actions Row */
+.staff-actions-row {
+  display: flex;
+  align-items: center;
   gap: 6px;
-  margin-top: 4px;
+  padding-top: 6px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.btn-staff-action {
+  height: 32px;
+  border-radius: 6px;
+  border: none;
+  font-size: 0.78rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.15s ease;
 }
 
 .btn-staff-call {
   background: #0284c7;
   color: #ffffff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  height: 32px;
-  border-radius: 6px;
-  text-decoration: none;
-  font-size: 0.8rem;
-  font-weight: 600;
+  flex: 1;
+}
+
+.btn-staff-call:hover {
+  background: #0369a1;
+  color: #ffffff;
 }
 
 .btn-staff-wa {
   background: #10b981;
   color: #ffffff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 32px;
-  border-radius: 6px;
-  text-decoration: none;
-  font-size: 0.95rem;
+  flex: 1;
+}
+
+.btn-staff-wa:hover {
+  background: #059669;
+  color: #ffffff;
 }
 
 .btn-staff-copy {
-  background: #e2e8f0;
+  background: #f1f5f9;
   color: #475569;
-  border: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 32px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 0.85rem;
+  width: 34px;
+  flex: 0 0 34px;
+  border: 1px solid #e2e8f0;
 }
 
-.staff-report-btn {
-  font-size: 0.7rem;
-  margin-top: 4px;
-  padding-top: 4px;
-  border-top: 1px solid #e2e8f0;
+.btn-staff-copy:hover {
+  background: #e2e8f0;
+  color: #1e293b;
+}
+
+.btn-staff-report {
+  background: #fffbeb;
+  color: #d97706;
+  width: 34px;
+  flex: 0 0 34px;
+  border: 1px solid #fde68a;
+}
+
+.btn-staff-report:hover {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+/* Empty State inside staff accordion */
+.office-staff-empty-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 14px;
+  background: #f8fafc;
+  border: 1px dashed #cbd5e1;
+  border-radius: 8px;
+  color: #94a3b8;
+  font-size: 0.8rem;
+  font-style: italic;
 }
 
 /* -------------------------------------------------------------

@@ -483,20 +483,6 @@
   ],
   "contacts": [
     {
-      "id": "c-102",
-      "villageId": "v-diakkawn",
-      "villageName": "Kolasib Diakkawn",
-      "category": "Kolasib Town",
-      "name": "C. Zohmingliana",
-      "designation": "Vice President (VCVP)",
-      "phone": "9862894512",
-      "altPhone": "",
-      "term": "2025-2030",
-      "notes": "",
-      "updatedAt": "2026-10-01T10:00:00.000Z",
-      "district": "Kolasib"
-    },
-    {
       "id": "c-103",
       "villageId": "v-diakkawn",
       "villageName": "Kolasib Diakkawn",
@@ -1719,6 +1705,26 @@
   ],
   "reports": [
     {
+      "id": "rep-1791435397337",
+      "contactId": "c-azl-1",
+      "contactName": "Pu Lalthansanga",
+      "villageName": "Aizawl Khatla",
+      "designation": "Chairman (Local Council)",
+      "district": "Aizawl",
+      "isEmergency": false,
+      "isOffice": false,
+      "officeName": "",
+      "serviceName": "Pu Lalthansanga",
+      "issueType": "incorrect_phone",
+      "description": "",
+      "suggestedPhone": "8014159713",
+      "suggestedName": "",
+      "reportedBy": "Citizen / Local Resident",
+      "reporterPhone": "",
+      "status": "pending",
+      "createdAt": "2026-10-08T04:56:37.337Z"
+    },
+    {
       "id": "rep-1791384907762",
       "contactId": "c-azl-1",
       "contactName": "Pu Lalthansanga",
@@ -1828,6 +1834,26 @@
     }
   ],
   "auditLogs": [
+    {
+      "id": "log-1791455084786",
+      "action": "DATABASE_RESTORED",
+      "details": "Admin manual restore via PIN authentication",
+      "timestamp": "2026-10-08T10:24:44.786Z"
+    },
+    {
+      "id": "log-1791435397337-753",
+      "action": "NEW_REPORT",
+      "details": "New error report submitted for Pu Lalthansanga [Aizawl]",
+      "targetId": "rep-1791435397337",
+      "timestamp": "2026-10-08T04:56:37.337Z"
+    },
+    {
+      "id": "log-1791434602448-997",
+      "action": "DELETE_CONTACT",
+      "details": "Deleted contact C. Zohmingliana (Kolasib Diakkawn)",
+      "targetId": "c-102",
+      "timestamp": "2026-10-08T04:43:22.448Z"
+    },
     {
       "id": "log-1791396415846-539",
       "action": "UPDATE_CONTACT",
@@ -2298,6 +2324,16 @@
     }
   ],
   "pushHistory": [
+    {
+      "id": "push-1791434602448",
+      "type": "CONTACT_DELETED",
+      "payload": {
+        "id": "c-102",
+        "villageName": "Kolasib Diakkawn",
+        "name": "C. Zohmingliana"
+      },
+      "timestamp": "2026-10-08T04:43:22.448Z"
+    },
     {
       "id": "push-1791396415846",
       "type": "CONTACT_UPDATED",
@@ -3189,8 +3225,8 @@
     }
   ],
   "meta": {
-    "lastUpdated": "2026-10-07T18:06:55.846Z",
-    "version": 1
+    "lastUpdated": "2026-10-08T10:24:44.786Z",
+    "version": 2
   },
   "offices": [
     {

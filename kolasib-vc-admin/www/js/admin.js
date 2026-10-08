@@ -42,6 +42,11 @@ document.addEventListener('DOMContentLoaded', () => {
   if (distSelect) distSelect.value = adminState.selectedDistrict;
   updateActiveDistrictBadge();
 
+  const dlDisplay = document.getElementById('citizenDownloadUrlDisplay');
+  if (dlDisplay) {
+    dlDisplay.textContent = window.location.origin + '/download/';
+  }
+
   if (adminState.pin) {
     verifyStoredPin();
   }
@@ -237,6 +242,10 @@ async function fetchAdminData() {
       adminState.auditLogs = auditRes.logs;
       renderAuditLogs();
     }
+
+    // Auto-save local snapshot and check if server has reset to default
+    checkServerResetCondition();
+    saveLocalAdminSnapshot();
   } catch (err) {
     console.error('Failed to fetch admin data:', err);
   }
@@ -314,8 +323,205 @@ function initAdminSSE() {
       showAdminToast(`🗑️ Notice deleted`);
       fetchAdminData();
     });
+
+    sse.addEventListener('directory_restored', (e) => {
+      showAdminToast(`🔄 Directory restored from backup!`);
+      fetchAdminData();
+    });
   } catch (e) {
     console.warn('Admin SSE error:', e);
+  }
+}
+
+// -------------------------------------------------------------
+// Cloud Persistence, Auto-Backup & Disaster Recovery
+// -------------------------------------------------------------
+function saveLocalAdminSnapshot() {
+  if (!adminState.contacts || adminState.contacts.length === 0) return;
+  try {
+    const snapshot = {
+      timestamp: Date.now(),
+      contactsCount: adminState.contacts.length,
+      villagesCount: (adminState.villages || []).length,
+      officesCount: (adminState.offices || []).length,
+      emergencyCount: (adminState.emergency || []).length,
+      data: {
+        contacts: adminState.contacts,
+        villages: adminState.villages,
+        offices: adminState.offices,
+        emergency: adminState.emergency,
+        broadcasts: adminState.broadcasts,
+        districts: adminState.districts
+      }
+    };
+    localStorage.setItem('mizoram_vc_admin_snapshot', JSON.stringify(snapshot));
+  } catch (e) {
+    console.warn('Could not save local admin snapshot:', e);
+  }
+}
+
+function checkServerResetCondition() {
+  try {
+    const raw = localStorage.getItem('mizoram_vc_admin_snapshot');
+    if (!raw) return;
+    const snapshot = JSON.parse(raw);
+    if (!snapshot || !snapshot.data || !snapshot.data.contacts) return;
+
+    const banner = document.getElementById('serverResetAlertBanner');
+    const msg = document.getElementById('resetBannerMsg');
+    if (!banner || !msg) return;
+
+    const currentContacts = (adminState.contacts || []).length;
+    const savedContacts = snapshot.contactsCount || snapshot.data.contacts.length;
+
+    // Detect if server has fewer contacts than our saved snapshot (indicating server sleep reset)
+    if (currentContacts < savedContacts && savedContacts > 20) {
+      const dateStr = new Date(snapshot.timestamp).toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+      msg.textContent = `Server currently has ${currentContacts} contacts, but your device has a newer backup with ${savedContacts} contacts from ${dateStr}.`;
+      banner.style.display = 'flex';
+    } else {
+      banner.style.display = 'none';
+    }
+  } catch (e) {
+    console.warn('Check server reset error:', e);
+  }
+}
+
+function dismissResetBanner() {
+  const banner = document.getElementById('serverResetAlertBanner');
+  if (banner) banner.style.display = 'none';
+}
+
+async function restoreFromLocalSnapshot() {
+  try {
+    const raw = localStorage.getItem('mizoram_vc_admin_snapshot');
+    if (!raw) {
+      showAdminToast('No local backup found on this device.');
+      return;
+    }
+    const snapshot = JSON.parse(raw);
+    if (!snapshot || !snapshot.data) {
+      showAdminToast('Invalid backup file.');
+      return;
+    }
+
+    showAdminToast('⏳ Restoring local backup to server...');
+    const res = await fetch(`${API_BASE}/api/admin/restore`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Admin-PIN': adminState.pin
+      },
+      body: JSON.stringify({ data: snapshot.data })
+    });
+    const result = await res.json();
+    if (result.success) {
+      dismissResetBanner();
+      showAdminToast(`✅ Database restored! ${result.summary.contactsCount} contacts pushed to server.`);
+      fetchAdminData();
+    } else {
+      showAdminToast(`❌ Restore failed: ${result.error}`);
+    }
+  } catch (err) {
+    showAdminToast(`❌ Restore error: ${err.message}`);
+  }
+}
+
+async function openStorageModal() {
+  const modal = document.getElementById('storageModal');
+  if (!modal) return;
+  modal.style.display = 'flex';
+
+  const badge = document.getElementById('storageProviderBadge');
+  const keepAlive = document.getElementById('storageKeepAliveText');
+  const lastSaved = document.getElementById('storageLastSavedText');
+  const contactsCount = document.getElementById('storageContactsCount');
+  const officesCount = document.getElementById('storageOfficesCount');
+
+  if (badge) { badge.textContent = 'Checking...'; badge.className = 'storage-badge'; }
+
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/storage-status`, {
+      headers: { 'X-Admin-PIN': adminState.pin }
+    });
+    const result = await res.json();
+    if (result.success && result.data) {
+      const d = result.data;
+      if (badge) {
+        if (d.isPersistent) {
+          badge.textContent = `🟢 ${d.provider === 'mongodb_atlas' ? 'MongoDB Atlas (Persistent)' : d.provider === 'github_gist' ? 'GitHub Gist (Persistent)' : 'Cloud Persistent'}`;
+          badge.className = 'storage-badge persistent';
+        } else {
+          badge.textContent = '⚠️ Local Storage (May reset on Render sleep)';
+          badge.className = 'storage-badge ephemeral';
+        }
+      }
+      if (keepAlive) {
+        if (d.keepAlive && d.keepAlive.active) {
+          keepAlive.textContent = `🟢 Active (Pings every 10 min)`;
+        } else {
+          keepAlive.textContent = `⚠️ Inactive (Set APP_URL on Render)`;
+        }
+      }
+      if (lastSaved && d.lastSaved) {
+        lastSaved.textContent = new Date(d.lastSaved).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      }
+      if (contactsCount && d.counts) contactsCount.textContent = d.counts.contacts;
+      if (officesCount && d.counts) officesCount.textContent = d.counts.offices;
+    }
+  } catch (e) {
+    if (badge) {
+      badge.textContent = 'Server Status Unavailable';
+      badge.className = 'storage-badge ephemeral';
+    }
+  }
+}
+
+function closeStorageModal() {
+  const modal = document.getElementById('storageModal');
+  if (modal) modal.style.display = 'none';
+}
+
+function downloadFullBackup() {
+  window.open(`${API_BASE}/api/admin/backup?pin=${encodeURIComponent(adminState.pin)}`, '_blank');
+}
+
+async function handleRestoreFile(event) {
+  const file = event.target.files && event.target.files[0];
+  if (!file) return;
+
+  try {
+    const text = await file.text();
+    const parsed = JSON.parse(text);
+    const backupData = parsed.data || parsed;
+
+    if (!backupData || !backupData.contacts || !backupData.villages) {
+      showAdminToast('❌ Invalid backup JSON: Missing contacts or villages.');
+      event.target.value = '';
+      return;
+    }
+
+    showAdminToast('⏳ Uploading and restoring database...');
+    const res = await fetch(`${API_BASE}/api/admin/restore`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Admin-PIN': adminState.pin
+      },
+      body: JSON.stringify({ data: backupData })
+    });
+    const result = await res.json();
+    if (result.success) {
+      showAdminToast(`✅ Restored ${result.summary.contactsCount} contacts from file!`);
+      closeStorageModal();
+      fetchAdminData();
+    } else {
+      showAdminToast(`❌ Restore failed: ${result.error}`);
+    }
+  } catch (err) {
+    showAdminToast(`❌ Failed to read backup file: ${err.message}`);
+  } finally {
+    event.target.value = '';
   }
 }
 
@@ -1636,8 +1842,55 @@ async function deleteEmergencyConfirm(emId, service) {
 // -------------------------------------------------------------
 // Government Offices & Staff Management
 // -------------------------------------------------------------
+if (!adminState.expandedOffices) {
+  adminState.expandedOffices = new Set();
+}
+
+function getAdminStaffInitials(name) {
+  if (!name) return 'OF';
+  const clean = name.trim().replace(/^(Pu|Pi|Dr|Er|Shri|Smt)\.?\s+/i, '');
+  const parts = clean.split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return 'OF';
+  if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+
+function toggleAdminOfficeStaff(offId) {
+  if (!adminState.expandedOffices) adminState.expandedOffices = new Set();
+  const isExp = adminState.expandedOffices.has(offId);
+  if (isExp) {
+    adminState.expandedOffices.delete(offId);
+  } else {
+    adminState.expandedOffices.add(offId);
+  }
+
+  const bodyEl = document.getElementById(`admin-staff-body-${offId}`);
+  const btnEl = document.getElementById(`admin-staff-btn-${offId}`);
+  const chevEl = document.getElementById(`admin-staff-chev-${offId}`);
+  if (bodyEl && btnEl && chevEl) {
+    const willExpand = !isExp;
+    bodyEl.style.display = willExpand ? 'flex' : 'none';
+    btnEl.classList.toggle('active', willExpand);
+    chevEl.classList.toggle('rotated', willExpand);
+  } else {
+    renderAdminOffices();
+  }
+}
+
+function toggleAllAdminOfficeStaff(expand) {
+  if (!adminState.expandedOffices) adminState.expandedOffices = new Set();
+  if (expand) {
+    adminState.offices.forEach(o => adminState.expandedOffices.add(o.id));
+  } else {
+    adminState.expandedOffices.clear();
+  }
+  renderAdminOffices();
+}
+
 function renderAdminOffices() {
   const container = document.getElementById('adminOfficesList');
+  const toolbar = document.getElementById('adminOfficesToolbar');
+  const countLabel = document.getElementById('adminOfficesCountLabel');
   if (!container) return;
 
   let list = [...adminState.offices];
@@ -1661,45 +1914,79 @@ function renderAdminOffices() {
         (s.phone && s.phone.includes(q))
       ))
     );
+
+    // Auto-expand office cards whose staff matched the search query
+    if (!adminState.expandedOffices) adminState.expandedOffices = new Set();
+    list.forEach(o => {
+      if (o.staff && o.staff.some(s =>
+        (s.name && s.name.toLowerCase().includes(q)) ||
+        (s.designation && s.designation.toLowerCase().includes(q)) ||
+        (s.phone && s.phone.includes(q))
+      )) {
+        adminState.expandedOffices.add(o.id);
+      }
+    });
   }
 
   if (list.length === 0) {
     container.innerHTML = `<div style="text-align:center; padding:30px; color:#94a3b8;">No government offices found matching search / active district filter.</div>`;
+    if (toolbar) toolbar.style.display = 'none';
     return;
   }
 
+  if (toolbar) toolbar.style.display = 'flex';
+  if (countLabel) {
+    countLabel.textContent = `${list.length} Office${list.length === 1 ? '' : 's'}`;
+  }
+
+  if (!adminState.expandedOffices) adminState.expandedOffices = new Set();
+  const searchQ = adminState.officeSearch ? adminState.officeSearch.trim().toLowerCase() : '';
+
   const html = list.map(off => {
     const staffList = off.staff || [];
+    const isExpanded = adminState.expandedOffices.has(off.id);
 
     const staffHtml = staffList.length === 0 ? `
-      <div style="font-size:0.75rem; color:#64748b; padding:8px 0; font-style:italic;">
-        No staff members added yet. Click "+ Add Staff" above to add officers.
+      <div class="admin-staff-empty-box">
+        <i class="fa-solid fa-user-group"></i>
+        <span>No staff members added yet. Click "+ Add Staff" above to add officers.</span>
       </div>
-    ` : staffList.map(stf => `
-      <div class="admin-staff-row">
-        <div class="admin-staff-info">
-          <div style="display:flex; align-items:center; gap:8px;">
-            <strong style="color:#ffffff; font-size:0.88rem;">${escapeHtml(stf.name)}</strong>
-            <span style="font-size:0.72rem; color:#38bdf8; background:rgba(2,132,199,0.15); padding:1px 6px; border-radius:4px;">${escapeHtml(stf.designation)}</span>
-          </div>
-          <div style="font-size:0.8rem; color:#cbd5e1; margin-top:2px;">
-            <i class="fa-solid fa-phone" style="color:#38bdf8; font-size:0.75rem;"></i>
-            <strong>${escapeHtml(stf.phone)}</strong>
-            ${stf.altPhone ? `<span style="color:#64748b; margin-left:6px;">(${escapeHtml(stf.altPhone)})</span>` : ''}
-            ${stf.email ? `<span style="color:#94a3b8; margin-left:8px; font-size:0.75rem;"><i class="fa-solid fa-envelope"></i> ${escapeHtml(stf.email)}</span>` : ''}
-          </div>
-        </div>
+    ` : staffList.map(stf => {
+      const isMatch = searchQ && (
+        (stf.name && stf.name.toLowerCase().includes(searchQ)) ||
+        (stf.designation && stf.designation.toLowerCase().includes(searchQ)) ||
+        (stf.phone && stf.phone.includes(searchQ))
+      );
+      const initials = getAdminStaffInitials(stf.name);
 
-        <div style="display:flex; gap:4px;">
-          <button class="btn-sm btn-secondary" onclick="openEditStaffModal('${off.id}', '${stf.id}')" title="Edit Staff">
-            <i class="fa-solid fa-pen"></i>
-          </button>
-          <button class="btn-sm btn-secondary" style="color:#f87171;" onclick="deleteStaffConfirm('${off.id}', '${stf.id}', '${escapeHtml(stf.name)}')" title="Remove Staff">
-            <i class="fa-solid fa-trash"></i>
-          </button>
+      return `
+        <div class="admin-staff-row ${isMatch ? 'admin-staff-match' : ''}">
+          <div class="admin-staff-avatar">
+            ${initials}
+          </div>
+          <div class="admin-staff-info">
+            <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+              <strong style="color:#ffffff; font-size:0.88rem;">${escapeHtml(stf.name)}</strong>
+              <span class="admin-staff-tag">${escapeHtml(stf.designation)}</span>
+            </div>
+            <div class="admin-staff-chips">
+              <span class="admin-chip-phone"><i class="fa-solid fa-phone"></i> ${escapeHtml(stf.phone)}</span>
+              ${stf.altPhone ? `<span class="admin-chip-alt"><i class="fa-solid fa-phone-volume"></i> ${escapeHtml(stf.altPhone)}</span>` : ''}
+              ${stf.email ? `<span class="admin-chip-email"><i class="fa-solid fa-envelope"></i> ${escapeHtml(stf.email)}</span>` : ''}
+            </div>
+          </div>
+
+          <div class="admin-staff-actions">
+            <button class="btn-sm btn-secondary" onclick="openEditStaffModal('${off.id}', '${stf.id}')" title="Edit Staff">
+              <i class="fa-solid fa-pen"></i>
+            </button>
+            <button class="btn-sm btn-secondary" style="color:#f87171;" onclick="deleteStaffConfirm('${off.id}', '${stf.id}', '${escapeHtml(stf.name)}')" title="Remove Staff">
+              <i class="fa-solid fa-trash"></i>
+            </button>
+          </div>
         </div>
-      </div>
-    `).join('');
+      `;
+    }).join('');
 
     return `
       <div class="admin-contact-card admin-office-card" id="admin-off-${off.id}">
@@ -1723,23 +2010,34 @@ function renderAdminOffices() {
         </div>
 
         <div class="admin-card-actions" style="margin-bottom:8px;">
-          <button class="btn btn-sm" style="background:#0284c7; color:#ffffff; font-weight:600;" onclick="openAddStaffModal('${off.id}', '${escapeHtml(off.name)}')">
-            <i class="fa-solid fa-user-plus"></i> Add Staff
-          </button>
           <button class="btn-card-edit" onclick="openEditOfficeModal('${off.id}')">
             <i class="fa-solid fa-pen-to-square"></i> Edit Office
           </button>
           <button class="btn-card-del" onclick="deleteOfficeConfirm('${off.id}', '${escapeHtml(off.name)}')">
-            <i class="fa-solid fa-trash-can"></i>
+            <i class="fa-solid fa-trash-can"></i> Delete
           </button>
         </div>
 
-        <!-- Office Staff Contact List -->
-        <div class="admin-office-staff-section">
-          <div class="admin-office-staff-header">
-            <span><i class="fa-solid fa-users" style="color:#38bdf8;"></i> Office Staff Contact List (${staffList.length})</span>
+        <!-- Office Staff Collapsible Section -->
+        <div class="admin-office-staff-section" id="admin-off-sec-${off.id}">
+          <div class="admin-staff-toggle-bar">
+            <button type="button" 
+                    id="admin-staff-btn-${off.id}"
+                    class="admin-staff-toggle-btn ${isExpanded ? 'active' : ''}" 
+                    onclick="toggleAdminOfficeStaff('${off.id}')">
+              <div style="display:flex; align-items:center; gap:8px;">
+                <span class="staff-toggle-icon"><i class="fa-solid fa-users" style="color:#38bdf8;"></i></span>
+                <strong style="color:#f8fafc; font-size:0.86rem;">Office Staff Directory</strong>
+                <span class="badge-count" style="font-size:0.75rem; background:rgba(2,132,199,0.2); color:#38bdf8; padding:2px 8px; border-radius:999px;">${staffList.length} staff</span>
+              </div>
+              <i id="admin-staff-chev-${off.id}" class="fa-solid fa-chevron-down admin-staff-chevron ${isExpanded ? 'rotated' : ''}"></i>
+            </button>
+            <button class="btn btn-sm" style="background:#0284c7; color:#ffffff; font-weight:600; white-space:nowrap;" onclick="openAddStaffModal('${off.id}', '${escapeHtml(off.name)}')" title="Add Staff Member">
+              <i class="fa-solid fa-user-plus"></i> Add Staff
+            </button>
           </div>
-          <div class="admin-staff-list">
+
+          <div id="admin-staff-body-${off.id}" class="admin-staff-collapse-body" style="${isExpanded ? 'display:flex;' : 'display:none;'}">
             ${staffHtml}
           </div>
         </div>
@@ -2269,6 +2567,38 @@ async function saveDeveloperInfo(e) {
     btn.disabled = false;
     btn.innerHTML = `<i class="fa-solid fa-cloud-arrow-up"></i> Save &amp; Push Developer Info`;
   }
+}
+
+// -------------------------------------------------------------
+// Citizen App Download Page Link Helpers
+// -------------------------------------------------------------
+function copyAdminCitizenDownloadLink() {
+  const url = window.location.origin + '/download/';
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(url).then(() => {
+      showAdminToast('📋 Download link copied to clipboard!');
+    }).catch(() => {
+      fallbackCopyAdminLink(url);
+    });
+  } else {
+    fallbackCopyAdminLink(url);
+  }
+}
+
+function fallbackCopyAdminLink(text) {
+  const temp = document.createElement('input');
+  temp.value = text;
+  document.body.appendChild(temp);
+  temp.select();
+  document.execCommand('copy');
+  document.body.removeChild(temp);
+  showAdminToast('📋 Download link copied to clipboard!');
+}
+
+function shareAdminCitizenDownloadLinkWhatsApp() {
+  const url = window.location.origin + '/download/';
+  const text = `Official Mizoram Village Council & Local Council Phonebook App download link. Access council leaders and emergency helplines offline: ${url}`;
+  window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
 }
 
 

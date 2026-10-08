@@ -985,15 +985,136 @@ app.post('/api/admin/import/csv', verifyAdmin, async (req, res) => {
   }
 });
 
+// -------------------------------------------------------------
+// Database Persistence, Storage Status & Disaster Recovery
+// -------------------------------------------------------------
+
+// Storage status endpoint
+app.get('/api/admin/storage-status', verifyAdmin, (req, res) => {
+  try {
+    const status = db.getStorageStatus();
+    status.keepAlive = {
+      active: keepAliveActive,
+      pingUrl: keepAliveTargetUrl,
+      lastPingTime: lastKeepAlivePing
+    };
+    res.json({ success: true, data: status });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Download full database backup JSON
+app.get('/api/admin/backup', verifyAdmin, (req, res) => {
+  try {
+    const dateStr = new Date().toISOString().replace(/[:.]/g, '-');
+    res.setHeader('Content-Disposition', `attachment; filename="mizoram_vc_backup_${dateStr}.json"`);
+    res.setHeader('Content-Type', 'application/json');
+    res.send(JSON.stringify(db.data, null, 2));
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Restore database from uploaded JSON
+app.post('/api/admin/restore', verifyAdmin, (req, res) => {
+  try {
+    const backupData = req.body.data || req.body;
+    if (!backupData || (!backupData.contacts && !backupData.villages)) {
+      return res.status(400).json({ success: false, error: 'Invalid backup structure. Must contain contacts and villages.' });
+    }
+
+    const summary = db.restore(backupData, 'Admin manual restore via PIN authentication');
+
+    // Broadcast full data reload event to all connected apps
+    broadcastToClients('directory_restored', {
+      action: 'restored',
+      message: 'Directory database was restored from backup.',
+      summary
+    });
+
+    res.json({
+      success: true,
+      message: 'Database restored successfully and pushed to all connected apps!',
+      summary
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Keep-Alive public health & ping endpoint
+app.get('/api/keepalive', (req, res) => {
+  res.json({
+    status: 'ok',
+    app: 'Mizoram VC Directory Sync Server',
+    keepAlive: {
+      active: keepAliveActive,
+      pingUrl: keepAliveTargetUrl,
+      lastPingTime: lastKeepAlivePing
+    },
+    storage: db.getStorageStatus(),
+    timestamp: new Date().toISOString()
+  });
+});
+
 // Health check
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'ok',
     app: 'Kolasib VC Sync Server',
     activePushClients: sseClients.length,
+    storage: db.storageProvider,
     timestamp: new Date().toISOString()
   });
 });
+
+// -------------------------------------------------------------
+// Anti-Sleep Keep-Alive Engine (Prevents Render Free Tier Sleep)
+// -------------------------------------------------------------
+let keepAliveActive = false;
+let keepAliveTargetUrl = null;
+let lastKeepAlivePing = null;
+
+function initKeepAlive() {
+  const externalUrl = process.env.RENDER_EXTERNAL_URL || process.env.APP_URL || process.env.PING_URL || process.env.PUBLIC_URL;
+  if (!externalUrl) {
+    console.log('[KeepAlive] ℹ️ RENDER_EXTERNAL_URL / APP_URL not detected. (Set APP_URL or deploy on Render to enable automated anti-sleep pings).');
+    return;
+  }
+
+  keepAliveTargetUrl = `${externalUrl.replace(/\/$/, '')}/api/health`;
+  keepAliveActive = true;
+  console.log(`[KeepAlive] 🟢 Anti-sleep keep-alive active: Pinging ${keepAliveTargetUrl} every 10 minutes`);
+
+  // Initial ping after 30 seconds
+  setTimeout(() => triggerSelfPing(), 30000);
+
+  // Ping every 10 minutes (600,000 ms) - safely under Render's 15 min idle threshold
+  setInterval(() => {
+    triggerSelfPing();
+  }, 10 * 60 * 1000);
+}
+
+function triggerSelfPing() {
+  if (!keepAliveTargetUrl) return;
+  try {
+    const isHttps = keepAliveTargetUrl.startsWith('https');
+    const client = isHttps ? require('https') : require('http');
+    const req = client.get(keepAliveTargetUrl, (res) => {
+      lastKeepAlivePing = new Date().toISOString();
+      console.log(`[KeepAlive] ⏰ Self-ping successful: ${keepAliveTargetUrl} [${res.statusCode}] - Server kept awake.`);
+    });
+    req.on('error', (err) => {
+      console.warn(`[KeepAlive] ⚠️ Ping warning: ${err.message}`);
+    });
+    req.setTimeout(12000, () => {
+      req.destroy();
+    });
+  } catch (e) {
+    console.warn(`[KeepAlive] ⚠️ Ping error: ${e.message}`);
+  }
+}
 
 // -------------------------------------------------------------
 // Static File Serving
@@ -1002,6 +1123,7 @@ const phonebookPath = path.join(__dirname, '..', 'kolasib-vc-phonebook', 'www');
 const adminPath = path.join(__dirname, '..', 'kolasib-vc-admin', 'www');
 const simulatorPath = path.join(__dirname, '..', 'simulator');
 const releaseApksPath = path.join(__dirname, '..', 'release_apks');
+const downloadPath = path.join(__dirname, '..', 'download');
 
 app.get('/downloads/kolasib-vc-phonebook.apk', (req, res) => {
   res.redirect(301, '/downloads/Mizoram_VC_Phonebook.apk');
@@ -1010,18 +1132,27 @@ app.get('/downloads/kolasib-vc-admin.apk', (req, res) => {
   res.redirect(301, '/downloads/Mizoram_VC_Admin.apk');
 });
 app.use('/downloads', express.static(releaseApksPath));
+
+// Citizen App Download Landing Page & Aliases
+app.get(['/download-app', '/get-app', '/apk'], (req, res) => {
+  res.redirect(301, '/download/');
+});
+app.use('/download', express.static(downloadPath));
+
 app.use('/phonebook', express.static(phonebookPath));
 app.use('/admin', express.static(adminPath));
 app.use('/', express.static(simulatorPath));
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`=======================================================`);
-  console.log(`🏛️ KOLASIB VC DIRECTORY SYSTEM RUNNING`);
+  console.log(`🏛️ MIZORAM VC DIRECTORY SYSTEM RUNNING`);
   console.log(`=======================================================`);
   console.log(`📱 Dual Device Simulator:  http://localhost:${PORT}/`);
   console.log(`📞 VC Phonebook App:       http://localhost:${PORT}/phonebook/`);
+  console.log(`📥 Citizen Download Page:  http://localhost:${PORT}/download/`);
   console.log(`🛡️ VC Admin App:           http://localhost:${PORT}/admin/`);
   console.log(`⚡ Sync & REST API:        http://localhost:${PORT}/api/contacts`);
   console.log(`🔑 Admin Default PIN:      ${ADMIN_PIN}`);
   console.log(`=======================================================`);
+  initKeepAlive();
 });

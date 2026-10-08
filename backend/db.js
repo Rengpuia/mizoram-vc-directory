@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const https = require('https');
 const {
   initialVillages,
   initialContacts,
@@ -14,11 +15,41 @@ const {
   TEMPLATES
 } = require('./csvUtils');
 
-const DATA_DIR = path.join(__dirname, 'data');
+const DATA_DIR = process.env.PERSISTENT_DATA_DIR || process.env.DATA_DIR || path.join(__dirname, 'data');
 const DB_FILE = path.join(DATA_DIR, 'kolasib_vc_store.json');
+
+function httpsRequest(options, postData) {
+  return new Promise((resolve, reject) => {
+    const req = https.request(options, (res) => {
+      let body = '';
+      res.on('data', chunk => body += chunk);
+      res.on('end', () => {
+        if (res.statusCode >= 200 && res.statusCode < 300) {
+          resolve(body);
+        } else {
+          reject(new Error(`HTTP ${res.statusCode}: ${body.substring(0, 250)}`));
+        }
+      });
+    });
+    req.on('error', reject);
+    req.setTimeout(12000, () => {
+      req.destroy();
+      reject(new Error('HTTPS request timed out after 12s'));
+    });
+    if (postData) req.write(postData);
+    req.end();
+  });
+}
 
 class Database {
   constructor() {
+    this.storageProvider = 'local_ephemeral';
+    this.cloudSyncing = false;
+    this.cloudDebounceTimer = null;
+    this.mongoClient = null;
+    this.mongoCollection = null;
+    this.cloudInitialized = false;
+
     this.data = {
       districts: [],
       villages: [],
@@ -35,6 +66,7 @@ class Database {
       }
     };
     this.init();
+    this.initCloud();
   }
 
   init() {
@@ -231,15 +263,272 @@ class Database {
     this.save();
   }
 
-  save() {
+  saveLocal() {
     try {
       this.data.meta.lastUpdated = new Date().toISOString();
       const tempPath = `${DB_FILE}.tmp`;
       fs.writeFileSync(tempPath, JSON.stringify(this.data, null, 2), 'utf8');
       fs.renameSync(tempPath, DB_FILE);
     } catch (err) {
-      console.error('Failed to save database:', err);
+      console.error('Failed to save database locally:', err);
     }
+  }
+
+  save() {
+    this.saveLocal();
+    this.scheduleCloudSync();
+  }
+
+  scheduleCloudSync() {
+    if (this.storageProvider === 'local_ephemeral') return;
+    if (this.cloudDebounceTimer) {
+      clearTimeout(this.cloudDebounceTimer);
+    }
+    this.cloudDebounceTimer = setTimeout(() => {
+      this.syncToCloud().catch(err => {
+        console.error('[CloudPersistence] ⚠️ Background cloud sync error:', err.message);
+      });
+    }, 400);
+  }
+
+  async initCloud() {
+    // 1. Try MongoDB Atlas Persistent Store
+    if (process.env.MONGODB_URI) {
+      try {
+        const { MongoClient } = require('mongodb');
+        const client = new MongoClient(process.env.MONGODB_URI, { serverSelectionTimeoutMS: 8000 });
+        await client.connect();
+        this.mongoClient = client;
+        const db = client.db();
+        this.mongoCollection = db.collection('mizoram_vc_store');
+        this.storageProvider = 'mongodb_atlas';
+        this.cloudInitialized = true;
+        console.log('[CloudPersistence] 🟢 Connected to MongoDB Atlas persistent cluster.');
+
+        const doc = await this.mongoCollection.findOne({ _id: 'vc_directory_store' });
+        if (doc && doc.data && Array.isArray(doc.data.contacts) && doc.data.contacts.length > 0) {
+          console.log(`[CloudPersistence] 📥 Restored ${doc.data.contacts.length} contacts and ${(doc.data.offices || []).length} offices from MongoDB Atlas!`);
+          this.data = doc.data;
+          this.saveLocal();
+        } else {
+          console.log('[CloudPersistence] 📤 Initializing MongoDB Atlas with local directory data...');
+          await this.mongoCollection.updateOne(
+            { _id: 'vc_directory_store' },
+            { $set: { _id: 'vc_directory_store', data: this.data, updatedAt: new Date() } },
+            { upsert: true }
+          );
+        }
+        return;
+      } catch (err) {
+        console.error('[CloudPersistence] ⚠️ MongoDB Atlas init error:', err.message);
+      }
+    }
+
+    // 2. Try GitHub Gist Persistent Store
+    const ghToken = process.env.GITHUB_TOKEN || process.env.GH_TOKEN;
+    const gistId = process.env.GIST_ID;
+    if (ghToken && gistId) {
+      try {
+        this.storageProvider = 'github_gist';
+        this.cloudInitialized = true;
+        console.log(`[CloudPersistence] 🟢 Connecting to GitHub Gist: ${gistId}...`);
+
+        const gistData = await this.fetchGistStore(gistId, ghToken);
+        if (gistData && Array.isArray(gistData.contacts) && gistData.contacts.length > 0) {
+          console.log(`[CloudPersistence] 📥 Restored ${gistData.contacts.length} contacts from GitHub Gist!`);
+          this.data = gistData;
+          this.saveLocal();
+        } else {
+          console.log('[CloudPersistence] 📤 Initializing GitHub Gist with local directory data...');
+          await this.updateGistStore(gistId, ghToken, this.data);
+        }
+        return;
+      } catch (err) {
+        console.error('[CloudPersistence] ⚠️ GitHub Gist sync error:', err.message);
+      }
+    }
+
+    // 3. Try Upstash Redis REST Store
+    if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) {
+      try {
+        this.storageProvider = 'upstash_redis';
+        this.cloudInitialized = true;
+        console.log('[CloudPersistence] 🟢 Connecting to Upstash Redis REST...');
+        const redisData = await this.fetchUpstashStore();
+        if (redisData && Array.isArray(redisData.contacts) && redisData.contacts.length > 0) {
+          console.log(`[CloudPersistence] 📥 Restored ${redisData.contacts.length} contacts from Upstash Redis!`);
+          this.data = redisData;
+          this.saveLocal();
+        } else {
+          console.log('[CloudPersistence] 📤 Initializing Upstash Redis with local directory data...');
+          await this.updateUpstashStore(this.data);
+        }
+        return;
+      } catch (err) {
+        console.error('[CloudPersistence] ⚠️ Upstash Redis sync error:', err.message);
+      }
+    }
+
+    // 4. Default: Local Ephemeral
+    this.storageProvider = 'local_ephemeral';
+    console.log('[CloudPersistence] ℹ️ Storage Mode: Local Storage.');
+    console.log('[CloudPersistence] ℹ️ Note: On Render free tier, server sleep can reset local files unless MONGODB_URI or GITHUB_TOKEN + GIST_ID is set.');
+  }
+
+  async syncToCloud() {
+    if (this.storageProvider === 'mongodb_atlas' && this.mongoCollection) {
+      await this.mongoCollection.updateOne(
+        { _id: 'vc_directory_store' },
+        { $set: { _id: 'vc_directory_store', data: this.data, updatedAt: new Date() } },
+        { upsert: true }
+      );
+      console.log('[CloudPersistence] ☁️ Synced to MongoDB Atlas.');
+    } else if (this.storageProvider === 'github_gist') {
+      const ghToken = process.env.GITHUB_TOKEN || process.env.GH_TOKEN;
+      const gistId = process.env.GIST_ID;
+      if (ghToken && gistId) {
+        await this.updateGistStore(gistId, ghToken, this.data);
+        console.log('[CloudPersistence] ☁️ Synced to GitHub Gist.');
+      }
+    } else if (this.storageProvider === 'upstash_redis') {
+      await this.updateUpstashStore(this.data);
+      console.log('[CloudPersistence] ☁️ Synced to Upstash Redis.');
+    }
+  }
+
+  async fetchGistStore(gistId, token) {
+    const options = {
+      hostname: 'api.github.com',
+      path: `/gists/${gistId}`,
+      method: 'GET',
+      headers: {
+        'User-Agent': 'Mizoram-VC-Server',
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'application/vnd.github.v3+json'
+      }
+    };
+    const resText = await httpsRequest(options);
+    const gist = JSON.parse(resText);
+    const file = gist.files && (gist.files['kolasib_vc_store.json'] || gist.files['mizoram_vc_store.json']);
+    if (file && file.content) {
+      return JSON.parse(file.content);
+    }
+    return null;
+  }
+
+  async updateGistStore(gistId, token, data) {
+    const payload = JSON.stringify({
+      description: `Mizoram VC Directory Persistent Store [Updated ${new Date().toISOString()}]`,
+      files: {
+        'kolasib_vc_store.json': {
+          content: JSON.stringify(data, null, 2)
+        }
+      }
+    });
+
+    const options = {
+      hostname: 'api.github.com',
+      path: `/gists/${gistId}`,
+      method: 'PATCH',
+      headers: {
+        'User-Agent': 'Mizoram-VC-Server',
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'application/vnd.github.v3+json',
+        'Content-Type': 'application/json',
+        'Content-Length': Buffer.byteLength(payload)
+      }
+    };
+    await httpsRequest(options, payload);
+  }
+
+  async fetchUpstashStore() {
+    const url = new URL(`${process.env.UPSTASH_REDIS_REST_URL.replace(/\/$/, '')}/get/mizoram_vc_store`);
+    const options = {
+      hostname: url.hostname,
+      path: url.pathname + url.search,
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${process.env.UPSTASH_REDIS_REST_TOKEN}`
+      }
+    };
+    const resText = await httpsRequest(options);
+    const json = JSON.parse(resText);
+    if (json && json.result) {
+      return JSON.parse(json.result);
+    }
+    return null;
+  }
+
+  async updateUpstashStore(data) {
+    const url = new URL(`${process.env.UPSTASH_REDIS_REST_URL.replace(/\/$/, '')}/set/mizoram_vc_store`);
+    const payload = JSON.stringify([JSON.stringify(data)]);
+    const options = {
+      hostname: url.hostname,
+      path: url.pathname,
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${process.env.UPSTASH_REDIS_REST_TOKEN}`,
+        'Content-Type': 'application/json',
+        'Content-Length': Buffer.byteLength(payload)
+      }
+    };
+    await httpsRequest(options, payload);
+  }
+
+  getStorageStatus() {
+    return {
+      provider: this.storageProvider,
+      isPersistent: this.storageProvider !== 'local_ephemeral',
+      lastSaved: this.data.meta.lastUpdated,
+      counts: {
+        districts: (this.data.districts || []).length,
+        villages: (this.data.villages || []).length,
+        contacts: (this.data.contacts || []).length,
+        offices: (this.data.offices || []).length,
+        emergency: (this.data.emergency || []).length
+      },
+      envDetected: {
+        mongodb: !!process.env.MONGODB_URI,
+        githubGist: !!((process.env.GITHUB_TOKEN || process.env.GH_TOKEN) && process.env.GIST_ID),
+        upstash: !!(process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN),
+        renderExternalUrl: !!(process.env.RENDER_EXTERNAL_URL || process.env.APP_URL)
+      }
+    };
+  }
+
+  restore(backupData, auditDetails = 'Admin manual restore') {
+    if (!backupData || typeof backupData !== 'object') {
+      throw new Error('Invalid backup data format: must be an object');
+    }
+    if (!Array.isArray(backupData.contacts) || !Array.isArray(backupData.villages)) {
+      throw new Error('Invalid backup structure: contacts and villages arrays are required');
+    }
+
+    this.data = {
+      ...this.data,
+      ...backupData,
+      meta: {
+        lastUpdated: new Date().toISOString(),
+        version: 2
+      }
+    };
+
+    if (!Array.isArray(this.data.auditLogs)) this.data.auditLogs = [];
+    this.data.auditLogs.unshift({
+      id: `log-${Date.now()}`,
+      action: 'DATABASE_RESTORED',
+      details: auditDetails,
+      timestamp: new Date().toISOString()
+    });
+
+    this.save();
+    return {
+      contactsCount: this.data.contacts.length,
+      villagesCount: this.data.villages.length,
+      officesCount: (this.data.offices || []).length,
+      emergencyCount: (this.data.emergency || []).length,
+      timestamp: this.data.meta.lastUpdated
+    };
   }
 
   // --- Districts ---
